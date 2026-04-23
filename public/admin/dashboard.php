@@ -125,8 +125,8 @@ try {
       ?>
       <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
         <div class="flex items-start justify-between mb-3">
-          <div class="w-10 h-10 bg-<?= $s['color'] ?>-50 text-<?= $s['color'] ?>-600 rounded-xl flex items-center justify-center">
-            <span class="material-symbols-outlined text-[20px]"><?= $s['icon'] ?></span>
+          <div class="w-10 h-10 bg-<?= $s['color'] ?>-50 text-<?= $s['color'] ?>-600 rounded-xl flex items-center justify-center hidden">
+            
           </div>
           <?php if ($s['change']): ?>
           <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full"><?= e($s['change']) ?></span>
@@ -206,10 +206,8 @@ try {
           <?php else: ?>
           <?php foreach ($recentLogs as $log): ?>
           <div class="flex items-start gap-3 px-5 py-3">
-            <div class="w-7 h-7 bg-teal-50 text-teal-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span class="material-symbols-outlined text-[14px]">
-                <?= str_contains($log['action'], 'login') ? 'login' : 'info' ?>
-              </span>
+            <div class="w-7 h-7 bg-teal-50 text-teal-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 hidden">
+              
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-semibold text-slate-700"><?= e($log['user_name'] ?? 'System') ?></p>

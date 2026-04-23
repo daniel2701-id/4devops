@@ -2,6 +2,25 @@
 require_once __DIR__ . '/../../includes/functions.php';
 require_role('patient');
 $user = current_user();
+$pdo  = db();
+
+$history = [];
+try {
+    $stmt = $pdo->prepare(
+        'SELECT a.*, u.name AS doctor_name, dp.specialization,
+                mr.diagnosis, mr.treatment, mr.prescription
+         FROM appointments a
+         JOIN users u ON u.id = a.doctor_id
+         LEFT JOIN doctor_profiles dp ON dp.user_id = a.doctor_id
+         LEFT JOIN medical_records mr ON mr.appointment_id = a.id
+         WHERE a.patient_id = ? AND a.status IN (?, ?)
+         ORDER BY a.scheduled_at DESC'
+    );
+    $stmt->execute([$user['id'], 'finished', 'cancelled']);
+    $history = $stmt->fetchAll();
+} catch (Exception $e) {
+    // Graceful degradation
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -80,11 +99,57 @@ $user = current_user();
       <p class="text-on-surface-variant font-medium mt-1">Daftar riwayat konsultasi dan penanganan medis Anda.</p>
     </div>
 
+    <?php if (empty($history)): ?>
     <div class="bg-white p-12 text-center rounded-2xl border border-slate-200 shadow-sm">
       <span class="material-symbols-outlined text-[64px] text-slate-300">history_edu</span>
       <h3 class="mt-4 text-lg font-bold text-slate-700">Belum Ada Riwayat</h3>
       <p class="mt-2 text-sm text-slate-500">Anda belum memiliki riwayat medis yang tersimpan di sistem.</p>
     </div>
+    <?php else: ?>
+    <div class="space-y-4">
+      <?php foreach ($history as $h): ?>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col md:flex-row gap-6">
+          <div class="flex-shrink-0">
+             <div class="w-16 h-16 bg-blue-100 text-blue-700 rounded-xl flex flex-col items-center justify-center leading-none">
+               <span class="text-sm font-bold uppercase"><?= strtoupper(date('M', strtotime($h['scheduled_at']))) ?></span>
+               <span class="text-2xl font-black"><?= date('d', strtotime($h['scheduled_at'])) ?></span>
+             </div>
+          </div>
+          <div class="flex-1">
+             <div class="flex items-center justify-between mb-2">
+               <h3 class="font-bold text-lg text-slate-900"><?= e($h['doctor_name']) ?></h3>
+               <?php if ($h['status'] === 'finished'): ?>
+                 <span class="text-xs font-bold px-3 py-1 rounded-full border bg-slate-100 text-slate-600 border-slate-200">Selesai</span>
+               <?php else: ?>
+                 <span class="text-xs font-bold px-3 py-1 rounded-full border bg-red-50 text-red-700 border-red-200">Dibatalkan</span>
+               <?php endif; ?>
+             </div>
+             <p class="text-sm text-slate-500 font-medium mb-4"><?= e($h['specialization'] ?? 'Umum') ?> · <?= date('Y', strtotime($h['scheduled_at'])) ?> · <?= date('H:i', strtotime($h['scheduled_at'])) ?> WIB</p>
+             
+             <?php if ($h['status'] === 'finished' && !empty($h['diagnosis'])): ?>
+               <div class="grid md:grid-cols-3 gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100">
+                 <div>
+                   <span class="block text-xs font-bold text-slate-400 mb-1">Diagnosis</span>
+                   <p class="text-sm text-slate-700"><?= nl2br(e($h['diagnosis'])) ?></p>
+                 </div>
+                 <div>
+                   <span class="block text-xs font-bold text-slate-400 mb-1">Tindakan</span>
+                   <p class="text-sm text-slate-700"><?= nl2br(e($h['treatment'] ?: '-')) ?></p>
+                 </div>
+                 <div>
+                   <span class="block text-xs font-bold text-slate-400 mb-1">Resep</span>
+                   <p class="text-sm text-slate-700"><?= nl2br(e($h['prescription'] ?: '-')) ?></p>
+                 </div>
+               </div>
+             <?php elseif ($h['status'] === 'finished'): ?>
+               <p class="text-sm text-slate-500 italic">Catatan medis belum tersedia.</p>
+             <?php endif; ?>
+             
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
   </main>
 </div>
 </body>

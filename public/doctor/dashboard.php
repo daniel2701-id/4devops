@@ -111,7 +111,7 @@ try {
       </div>
       <div class="flex items-center gap-3">
         <button class="relative p-2 text-slate-500 hover:text-primary transition-colors">
-          <span class="material-symbols-outlined text-[22px]">notifications</span>
+          
           <?php if ($pending > 0): ?>
           <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           <?php endif; ?>
@@ -130,7 +130,7 @@ try {
             <p class="text-3xl font-black text-slate-900"><?= $totalToday ?></p>
             <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Today's Patients</p>
             <div class="flex items-center gap-1 mt-2 text-xs font-medium text-green-600">
-              <span class="material-symbols-outlined text-[14px]">trending_up</span>
+              
               Today's Appointments
             </div>
           </div>
@@ -153,7 +153,7 @@ try {
 
           <?php if (empty($todayAppts)): ?>
           <div class="p-12 text-center text-slate-400">
-            <span class="material-symbols-outlined text-[48px] text-slate-300">event_busy</span>
+            
             <p class="font-medium mt-3">Tidak ada jadwal hari ini.</p>
           </div>
           <?php else: ?>

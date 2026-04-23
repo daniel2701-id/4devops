@@ -111,7 +111,7 @@ try {
         <p class="text-on-surface-variant font-medium mt-1">Kelola jadwal dan reservasi kesehatan Anda di sini.</p>
       </div>
       <button class="w-10 h-10 rounded-full border border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary transition-colors flex items-center justify-center relative">
-        <span class="material-symbols-outlined text-[20px]">notifications</span>
+        
         <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
       </button>
     </div>
@@ -131,8 +131,8 @@ try {
       ?>
       <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
         <div class="flex items-center justify-between mb-3">
-          <div class="w-10 h-10 <?= $bg ?> <?= $text ?> rounded-xl flex items-center justify-center">
-            <span class="material-symbols-outlined text-[20px]"><?= $s['icon'] ?></span>
+          <div class="w-10 h-10 <?= $bg ?> <?= $text ?> rounded-xl flex items-center justify-center hidden">
+            
           </div>
         </div>
         <p class="text-3xl font-black text-slate-900"><?= $s['value'] ?></p>
@@ -149,8 +149,8 @@ try {
       <div class="md:col-span-2 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl p-6 shadow-md">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div class="flex items-start gap-4">
-            <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-              <span class="material-symbols-outlined text-white text-3xl">event_available</span>
+            <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0 hidden">
+              
             </div>
             <div>
               <h3 class="text-xl font-bold mb-1">Buat Reservasi Baru</h3>
@@ -158,7 +158,7 @@ try {
             </div>
           </div>
           <a href="reservasi.php" class="inline-flex items-center justify-center gap-2 bg-white text-blue-700 px-6 py-3 rounded-full text-sm font-bold hover:bg-blue-50 transition-colors shadow-lg active:scale-95 flex-shrink-0">
-            Mulai Reservasi <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            Mulai Reservasi 
           </a>
         </div>
       </div>
@@ -168,17 +168,16 @@ try {
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
       <div class="flex items-center justify-between p-6 border-b border-slate-100">
         <h3 class="font-bold text-slate-900 flex items-center gap-2">
-          <span class="material-symbols-outlined text-blue-600 text-[20px]">event</span>
           Janji Temu Mendatang
         </h3>
       </div>
 
       <?php if (empty($upcoming)): ?>
       <div class="p-12 text-center text-slate-400">
-        <span class="material-symbols-outlined text-[48px] text-slate-300">event_busy</span>
+        
         <p class="font-medium mt-3">Belum ada janji temu mendatang.</p>
         <a href="reservasi.php" class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline">
-          <span class="material-symbols-outlined text-[16px]">add_circle</span>
+          
           Buat Reservasi
         </a>
       </div>
