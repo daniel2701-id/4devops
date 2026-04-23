@@ -93,17 +93,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <nav class="flex-1 p-4 space-y-1">
     <?php
     $navItems = [
-      ['icon'=>'dashboard',   'label'=>'Beranda',        'href'=>'dashboard.php', 'active'=>false],
-      ['icon'=>'stethoscope', 'label'=>'Daftar Dokter',  'href'=>'doctors.php',   'active'=>true],
-      ['icon'=>'event',       'label'=>'Reservasi',      'href'=>'#',             'active'=>false],
-      ['icon'=>'group',       'label'=>'Pasien',         'href'=>'#',             'active'=>false],
-      ['icon'=>'history',     'label'=>'Riwayat',        'href'=>'#',             'active'=>false],
-      ['icon'=>'person',      'label'=>'Profil',         'href'=>'#',             'active'=>false],
+      ['icon'=>'dashboard',   'label'=>'Beranda',       'href'=>'dashboard.php', 'active'=>false],
+      ['icon'=>'stethoscope', 'label'=>'Daftar Dokter', 'href'=>'doctors.php',   'active'=>true],
+      ['icon'=>'group',       'label'=>'Daftar Pasien', 'href'=>'patients.php',  'active'=>false],
     ];
     foreach ($navItems as $item):
       $cls = $item['active']
-        ? 'bg-teal-500/10 text-teal-400 font-bold border border-teal-500/20'
-        : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium';
+        ? 'bg-primary-fixed text-primary font-bold'
+        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-medium';
     ?>
     <a href="<?= e($item['href']) ?>" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm <?= $cls ?>">
       <span class="material-symbols-outlined text-[20px]"><?= $item['icon'] ?></span>
@@ -112,9 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endforeach; ?>
   </nav>
 
-  <div class="p-4 border-t border-slate-800">
+  <div class="p-4 border-t border-slate-100">
     <a href="<?= APP_URL ?>/admin/logout.php"
-       class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors">
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors">
       <span class="material-symbols-outlined text-[20px]">logout</span>
       Keluar
     </a>

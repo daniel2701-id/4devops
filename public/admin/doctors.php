@@ -74,12 +74,9 @@ $error   = flash('error');
   <nav class="flex-1 p-4 space-y-1">
     <?php
     $navItems = [
-      ['icon'=>'dashboard',   'label'=>'Beranda',        'href'=>'dashboard.php', 'active'=>false],
-      ['icon'=>'stethoscope', 'label'=>'Daftar Dokter',  'href'=>'doctors.php',   'active'=>true],
-      ['icon'=>'event',       'label'=>'Reservasi',      'href'=>'#',             'active'=>false],
-      ['icon'=>'group',       'label'=>'Pasien',         'href'=>'#',             'active'=>false],
-      ['icon'=>'history',     'label'=>'Riwayat',        'href'=>'#',             'active'=>false],
-      ['icon'=>'person',      'label'=>'Profil',         'href'=>'#',             'active'=>false],
+      ['icon'=>'dashboard',   'label'=>'Beranda',       'href'=>'dashboard.php', 'active'=>false],
+      ['icon'=>'stethoscope', 'label'=>'Daftar Dokter', 'href'=>'doctors.php',   'active'=>true],
+      ['icon'=>'group',       'label'=>'Daftar Pasien', 'href'=>'patients.php',  'active'=>false],
     ];
     foreach ($navItems as $item):
       $cls = $item['active']

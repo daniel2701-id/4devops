@@ -75,11 +75,8 @@ $success = flash('success');
     <nav class="flex-1 p-4 space-y-1">
       <?php
       $navItems = [
-        ['icon'=>'home',         'label'=>'Beranda',       'href'=>'dashboard.php', 'active'=>false],
-        ['icon'=>'calendar_month','label'=>'Jadwal Saya',  'href'=>'jadwal.php',    'active'=>true],
-        ['icon'=>'group',        'label'=>'Pasien',        'href'=>'#',             'active'=>false],
-        ['icon'=>'chat_bubble',  'label'=>'Konsultasi',    'href'=>'#',             'active'=>false],
-        ['icon'=>'person',       'label'=>'Profil',        'href'=>'#',             'active'=>false],
+        ['icon'=>'home',          'label'=>'Beranda',    'href'=>'dashboard.php', 'active'=>false],
+        ['icon'=>'calendar_month','label'=>'Jadwal Saya','href'=>'jadwal.php',    'active'=>true],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']

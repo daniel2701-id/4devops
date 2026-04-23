@@ -74,10 +74,8 @@ try {
     <nav class="flex-1 p-4 space-y-1">
       <?php
       $navItems = [
-        ['icon'=>'home','label'=>'Beranda',       'href'=>'dashboard.php', 'active'=>true],
-        ['icon'=>'event','label'=>'Reservasi',     'href'=>'reservasi.php', 'active'=>false],
-        ['icon'=>'history','label'=>'Riwayat',     'href'=>'#', 'active'=>false],
-        ['icon'=>'person','label'=>'Profil',       'href'=>'#', 'active'=>false],
+        ['icon'=>'home',  'label'=>'Beranda',  'href'=>'dashboard.php', 'active'=>true],
+        ['icon'=>'event', 'label'=>'Reservasi','href'=>'reservasi.php', 'active'=>false],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']
@@ -108,8 +106,8 @@ try {
     <!-- Header -->
     <div class="mb-8 flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-black text-on-surface">Halo, <?= e(explode(' ', $user['name'])[0]) ?> 👋</h1>
-        <p class="text-on-surface-variant font-medium mt-1">Semoga hari Anda sehat selalu.</p>
+        <h1 class="text-2xl font-black text-on-surface">Selamat datang, <?= e(explode(' ', $user['name'])[0]) ?>!</h1>
+        <p class="text-on-surface-variant font-medium mt-1">Kelola jadwal dan reservasi kesehatan Anda di sini.</p>
       </div>
       <button class="w-10 h-10 rounded-full border border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary transition-colors flex items-center justify-center relative">
         <span class="material-symbols-outlined text-[20px]">notifications</span>
@@ -164,14 +162,14 @@ try {
         <div class="grid grid-cols-2 gap-3">
           <?php
           $quick = [
-            ['icon'=>'event_available','label'=>'Reservasi Baru', 'color'=>'blue'],
-            ['icon'=>'history_edu',    'label'=>'Riwayat Medis',  'color'=>'purple'],
-            ['icon'=>'medication',     'label'=>'Resep Obat',     'color'=>'teal'],
-            ['icon'=>'stethoscope',    'label'=>'Info Dokter',    'color'=>'pink'],
+            ['icon'=>'event_available','label'=>'Reservasi Baru', 'color'=>'blue',   'href'=>'reservasi.php'],
+            ['icon'=>'history_edu',    'label'=>'Riwayat Medis',  'color'=>'purple', 'href'=>'reservasi.php'],
+            ['icon'=>'medication',     'label'=>'Resep Obat',     'color'=>'teal',   'href'=>'reservasi.php'],
+            ['icon'=>'stethoscope',    'label'=>'Info Dokter',    'color'=>'pink',   'href'=>'reservasi.php'],
           ];
           foreach ($quick as $q):
           ?>
-          <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-<?= $q['color'] ?>-50 text-<?= $q['color'] ?>-600 hover:bg-<?= $q['color'] ?>-100 transition-colors text-center">
+          <a href="<?= $q['href'] ?>" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-<?= $q['color'] ?>-50 text-<?= $q['color'] ?>-600 hover:bg-<?= $q['color'] ?>-100 transition-colors text-center">
             <span class="material-symbols-outlined text-[24px]"><?= $q['icon'] ?></span>
             <span class="text-xs font-bold"><?= e($q['label']) ?></span>
           </a>
