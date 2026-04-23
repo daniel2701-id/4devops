@@ -180,13 +180,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Spesialisasi</label>
-            <select name="specialization" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all text-slate-700 appearance-none">
-              <option value="Umum" <?= ($_POST['specialization'] ?? '') === 'Umum' ? 'selected' : '' ?>>Dokter Umum</option>
-              <option value="Penyakit Dalam" <?= ($_POST['specialization'] ?? '') === 'Penyakit Dalam' ? 'selected' : '' ?>>Spesialis Penyakit Dalam</option>
-              <option value="Anak" <?= ($_POST['specialization'] ?? '') === 'Anak' ? 'selected' : '' ?>>Spesialis Anak</option>
-              <option value="Kandungan & Kebidanan" <?= ($_POST['specialization'] ?? '') === 'Kandungan & Kebidanan' ? 'selected' : '' ?>>Spesialis Kandungan & Kebidanan</option>
-              <option value="Gigi & Mulut" <?= ($_POST['specialization'] ?? '') === 'Gigi & Mulut' ? 'selected' : '' ?>>Spesialis Gigi & Mulut</option>
-            </select>
+            <input type="text" name="specialization" list="spec-list" placeholder="Pilih atau ketik spesialisasi..." required
+              value="<?= e($_POST['specialization'] ?? 'Umum') ?>"
+              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+            <datalist id="spec-list">
+              <option value="Umum">
+              <option value="Penyakit Dalam">
+              <option value="Anak">
+              <option value="Kandungan & Kebidanan">
+              <option value="Gigi & Mulut">
+            </datalist>
           </div>
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nomor STR</label>

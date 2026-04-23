@@ -10,52 +10,62 @@ $error   = '';
 $success = '';
 $tab     = $_GET['tab'] ?? 'login';
 
+$isGated = empty($_SESSION['admin_gate_passed']);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_abort();
-    $tab = $_POST['tab'] ?? 'login';
-
-    if ($tab === 'login') {
-        $email    = sanitize_email($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-
-        if (empty($email) || empty($password)) {
-            $error = 'Isi semua kolom.';
+    
+    if ($isGated) {
+        $otp = $_POST['gate_code'] ?? '';
+        if ($otp === '110605') {
+            $_SESSION['admin_gate_passed'] = true;
+            header('Location: login.php');
+            exit;
         } else {
-            $result = attempt_login($email, $password, 'admin');
-            if ($result['success']) {
-                // Generate OTP & redirect
-                $_SESSION['admin_pending_id']    = $result['user']['id'];
-                $_SESSION['admin_pending_name']  = $result['user']['name'];
-                $_SESSION['admin_pending_email'] = $result['user']['email'];
-                $_SESSION['admin_otp_demo']      = generate_otp((int) $result['user']['id']);
-                audit_log('admin_otp_sent', (int) $result['user']['id']);
-                header('Location: ' . APP_URL . '/admin/verify.php');
-                exit;
-            }
-            $error = $result['message'];
+            $error = 'Kode verifikasi sistem tidak valid.';
         }
-    } elseif ($tab === 'register') {
-        $name     = sanitize_string($_POST['name'] ?? '', 150);
-        $email    = sanitize_email($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $confirm  = $_POST['confirm_password'] ?? '';
+    } else {
+        $tab = $_POST['tab'] ?? 'login';
 
-        $passErrors = validate_password_strength($password);
-        if (empty($name) || empty($email) || empty($password)) {
-            $error = 'Isi semua kolom.';
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = 'Format email tidak valid.';
-        } elseif ($password !== $confirm) {
-            $error = 'Konfirmasi kata sandi tidak cocok.';
-        } elseif (!empty($passErrors)) {
-            $error = 'Kata sandi: ' . implode(', ', $passErrors) . '.';
-        } else {
-            $result = register_admin($name, $email, $password);
-            if ($result['success']) {
-                $success = 'Pendaftaran admin berhasil! Silakan masuk.';
-                $tab = 'login';
+        if ($tab === 'login') {
+            $email    = sanitize_email($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+
+            if (empty($email) || empty($password)) {
+                $error = 'Isi semua kolom.';
             } else {
+                $result = attempt_login($email, $password, 'admin');
+                if ($result['success']) {
+                    create_auth_session($result['user']);
+                    audit_log('login', (int) $result['user']['id']);
+                    header('Location: ' . APP_URL . '/admin/dashboard.php');
+                    exit;
+                }
                 $error = $result['message'];
+            }
+        } elseif ($tab === 'register') {
+            $name     = sanitize_string($_POST['name'] ?? '', 150);
+            $email    = sanitize_email($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $confirm  = $_POST['confirm_password'] ?? '';
+
+            $passErrors = validate_password_strength($password);
+            if (empty($name) || empty($email) || empty($password)) {
+                $error = 'Isi semua kolom.';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $error = 'Format email tidak valid.';
+            } elseif ($password !== $confirm) {
+                $error = 'Konfirmasi kata sandi tidak cocok.';
+            } elseif (!empty($passErrors)) {
+                $error = 'Kata sandi: ' . implode(', ', $passErrors) . '.';
+            } else {
+                $result = register_admin($name, $email, $password);
+                if ($result['success']) {
+                    $success = 'Pendaftaran admin berhasil! Silakan masuk.';
+                    $tab = 'login';
+                } else {
+                    $error = $result['message'];
+                }
             }
         }
     }
@@ -109,12 +119,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </a>
 
       <div class="mb-6">
-        <h2 class="text-2xl font-black text-white mb-1">Admin Portal</h2>
-        <p class="text-sm font-medium text-slate-400"><?= $tab === 'login' ? 'Sign in to your account.' : 'Create a new admin account.' ?></p>
+        <h2 class="text-2xl font-black text-white mb-1"><?= $isGated ? 'System Security Gate' : 'Admin Portal' ?></h2>
+        <p class="text-sm font-medium text-slate-400">
+          <?php
+          if ($isGated) {
+              echo 'Enter the administrative verification code to continue.';
+          } else {
+              echo $tab === 'login' ? 'Sign in to your account.' : 'Create a new admin account.';
+          }
+          ?>
+        </p>
       </div>
 
       <?= alert_html($error, 'error') ?>
       <?= alert_html($success, 'success') ?>
+
+      <?php if ($isGated): ?>
+      <!-- Gate Form -->
+      <form method="POST" class="flex flex-col gap-5">
+        <?= csrf_field() ?>
+        
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Verification Code</label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-4 text-slate-500 text-[20px]">pin</span>
+            <input type="password" name="gate_code" placeholder="••••••" required autocomplete="off" class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none text-center tracking-[0.5em] font-bold">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full h-[52px] bg-teal-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-teal-500 transition-colors active:scale-95 shadow-lg shadow-teal-500/20">
+          Verify Access <span class="material-symbols-outlined text-[20px]">security</span>
+        </button>
+      </form>
+      <?php else: ?>
 
       <!-- Tab Switcher -->
       <div class="flex bg-slate-800 rounded-xl p-1 mb-6 border border-slate-700">
@@ -191,6 +228,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           Register Admin <span class="material-symbols-outlined text-[20px]">person_add</span>
         </button>
       </form>
+      
+      <?php endif; ?>
 
     </div>
   </div>
