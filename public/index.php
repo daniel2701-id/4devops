@@ -95,7 +95,7 @@ if (is_logged_in()) {
     <div class="delay-3 animate-fade-up">
       <a href="<?= APP_URL ?>/landing.php"
         class="inline-flex items-center gap-2 px-10 py-4 bg-primary text-white text-lg font-bold rounded-full brand-shadow hover:bg-primary-light transition-all active:scale-95">
-        niyel sigma
+        Mulai Sekarang
         <span class="material-symbols-outlined text-[22px]">arrow_forward</span>
       </a>
     </div>
