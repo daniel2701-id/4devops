@@ -36,36 +36,36 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CareConnect – Dashboard Pasien</title>
 <?= tailwind_cdn() ?>
-<?= tailwind_config('#2563eb') ?>
+<?= tailwind_config() ?>
 <?= google_fonts() ?>
 <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+<body class="bg-surface text-on-surface antialiased min-h-screen">
 
 <!-- Sidebar + Main layout -->
 <div class="flex min-h-screen">
 
   <!-- Sidebar -->
-  <aside class="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col hidden md:flex">
-    <div class="p-6 border-b border-slate-100">
+  <aside class="w-64 bg-surface border-r border-outline-variant flex-shrink-0 flex flex-col hidden md:flex">
+    <div class="p-6 border-b border-outline-variant">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-blue-50 flex items-center justify-center rounded-lg transform rotate-45">
-          <span class="material-symbols-outlined text-blue-600 transform -rotate-45 text-[16px]" style="font-variation-settings:'FILL' 1;">medical_services</span>
+        <div class="w-8 h-8 bg-primary-fixed flex items-center justify-center rounded-lg transform rotate-45">
+          <span class="material-symbols-outlined text-primary transform -rotate-45 text-[16px]" style="font-variation-settings:'FILL' 1;">medical_services</span>
         </div>
-        <span class="font-extrabold tracking-tight text-slate-900 text-lg">CareConnect</span>
+        <span class="font-extrabold tracking-tight text-on-surface text-lg">CareConnect</span>
       </div>
-      <div class="mt-1 text-xs text-slate-500 font-medium ml-10">Portal Kesehatan</div>
+      <div class="mt-1 text-xs text-on-surface-variant font-medium ml-10">Portal Kesehatan</div>
     </div>
 
     <!-- User -->
-    <div class="p-4 border-b border-slate-100">
+    <div class="p-4 border-b border-outline-variant">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
+        <div class="w-10 h-10 bg-primary-fixed text-primary rounded-full flex items-center justify-center font-bold text-sm">
           <?= e(initials($user['name'])) ?>
         </div>
         <div>
-          <p class="text-sm font-bold text-slate-800"><?= e($user['name']) ?></p>
-          <p class="text-xs text-slate-400">Pasien</p>
+          <p class="text-sm font-bold text-on-surface"><?= e($user['name']) ?></p>
+          <p class="text-xs text-on-surface-variant">Pasien</p>
         </div>
       </div>
     </div>
@@ -81,8 +81,8 @@ try {
       ];
       foreach ($navItems as $item):
         $cls = $item['active']
-          ? 'bg-blue-50 text-blue-700 font-bold'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-medium';
+          ? 'bg-primary-fixed text-primary font-bold'
+          : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium';
       ?>
       <a href="<?= e($item['href']) ?>"
          class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm <?= $cls ?>">
@@ -93,9 +93,9 @@ try {
     </nav>
 
     <!-- Logout -->
-    <div class="p-4 border-t border-slate-100">
+    <div class="p-4 border-t border-outline-variant">
       <a href="<?= APP_URL ?>/patient/logout.php"
-         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors">
+         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-error/10 hover:text-error transition-colors">
         <span class="material-symbols-outlined text-[20px]">logout</span>
         Keluar
       </a>
@@ -103,12 +103,18 @@ try {
   </aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-6 lg:p-8 overflow-auto">
+  <main class="flex-1 p-6 lg:p-8 overflow-auto bg-surface-container-lowest">
 
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-2xl font-black text-slate-900">Halo, <?= e(explode(' ', $user['name'])[0]) ?> 👋</h1>
-      <p class="text-slate-500 font-medium mt-1">Semoga hari Anda sehat selalu.</p>
+    <div class="mb-8 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-black text-on-surface">Halo, <?= e(explode(' ', $user['name'])[0]) ?> 👋</h1>
+        <p class="text-on-surface-variant font-medium mt-1">Semoga hari Anda sehat selalu.</p>
+      </div>
+      <button class="w-10 h-10 rounded-full border border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary transition-colors flex items-center justify-center relative">
+        <span class="material-symbols-outlined text-[20px]">notifications</span>
+        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+      </button>
     </div>
 
     <!-- Stats Row -->
