@@ -231,14 +231,6 @@ try {
         </div>
         <?php endif; ?>
 
-        <!-- Quick Actions -->
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Aksi Cepat</h4>
-        <div class="space-y-2">
-          <a href="jadwal.php" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-primary-fixed text-slate-700 hover:text-primary transition-colors text-sm font-medium">
-            <span class="material-symbols-outlined text-[20px]">calendar_month</span>
-            Kelola Sesi Konsultasi
-          </a>
-        </div>
       </div>
 
     </div>
