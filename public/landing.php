@@ -60,7 +60,7 @@ $timeout = !empty($_GET['timeout']) ? 'Sesi Anda telah berakhir. Silakan masuk k
           Portal Kesehatan Terpadu
         </span>
         <h1 class="text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-tight">
-          Andi Daniel Tenri Dio Anda Lebih<br>Cerdas &amp; Efisien
+          Kelola Klinik Anda Lebih<br>Cerdas &amp; Efisien
         </h1>
         <p class="text-lg text-slate-600 font-medium max-w-xl">
           Tingkatkan kualitas pelayanan dengan sistem manajemen klinik berbasis cloud yang dirancang khusus untuk
