@@ -52,25 +52,25 @@ try {
 <div class="flex min-h-screen">
 
   <!-- Sidebar -->
-  <aside class="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex-col hidden md:flex">
-    <div class="p-6 border-b border-slate-100">
+  <aside class="w-64 bg-emerald-700 text-white border-r border-emerald-800 flex-shrink-0 flex-col hidden md:flex shadow-xl">
+    <div class="p-6 border-b border-emerald-600/50">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-primary-fixed flex items-center justify-center rounded-lg transform rotate-45">
-          <span class="material-symbols-outlined text-primary transform -rotate-45 text-[16px]" style="font-variation-settings:'FILL' 1;">medical_services</span>
+        <div class="w-8 h-8 bg-white/20 flex items-center justify-center rounded-lg transform rotate-45">
+          <span class="material-symbols-outlined text-white transform -rotate-45 text-[16px]" style="font-variation-settings:'FILL' 1;">medical_services</span>
         </div>
-        <span class="font-extrabold tracking-tight text-slate-900 text-sm">CareConnect <span class="text-primary text-xs font-bold">Admin</span></span>
+        <span class="font-extrabold tracking-tight text-white text-sm">CareConnect <span class="text-emerald-200 text-xs font-bold">Admin</span></span>
       </div>
     </div>
 
     <!-- Admin info -->
-    <div class="p-4 border-b border-slate-100">
+    <div class="p-4 border-b border-emerald-600/50">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-primary-fixed text-primary rounded-full flex items-center justify-center font-bold text-sm">
+        <div class="w-10 h-10 bg-white/20 text-white rounded-full flex items-center justify-center font-bold text-sm">
           <?= e(initials($user['name'])) ?>
         </div>
         <div>
-          <p class="text-sm font-bold text-slate-800"><?= e($user['name']) ?></p>
-          <p class="text-xs text-slate-400">Administrator</p>
+          <p class="text-sm font-bold text-white"><?= e($user['name']) ?></p>
+          <p class="text-xs text-emerald-200">Administrator</p>
         </div>
       </div>
     </div>
@@ -84,8 +84,8 @@ try {
       ];
       foreach ($navItems as $item):
         $cls = $item['active']
-          ? 'bg-primary-fixed text-primary font-bold'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-medium';
+          ? 'bg-white/20 text-white font-bold shadow-sm'
+          : 'text-emerald-100 hover:bg-white/10 hover:text-white font-medium';
       ?>
       <a href="<?= e($item['href']) ?>" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm <?= $cls ?>">
         <span class="material-symbols-outlined text-[20px]"><?= $item['icon'] ?></span>
@@ -94,9 +94,9 @@ try {
       <?php endforeach; ?>
     </nav>
 
-    <div class="p-4 border-t border-slate-100">
+    <div class="p-4 border-t border-emerald-600/50">
       <a href="<?= APP_URL ?>/admin/logout.php"
-         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors">
+         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-emerald-200 hover:bg-red-500/20 hover:text-red-200 transition-colors">
         <span class="material-symbols-outlined text-[20px]">logout</span>
         Keluar
       </a>
