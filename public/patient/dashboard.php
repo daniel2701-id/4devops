@@ -75,9 +75,8 @@ try {
       <?php
       $navItems = [
         ['icon'=>'home',    'label'=>'Beranda',  'href'=>'dashboard.php', 'active'=>true],
-        ['icon'=>'event',   'label'=>'Reservasi','href'=>'reservasi.php', 'active'=>false],
-        ['icon'=>'history', 'label'=>'Riwayat',  'href'=>'reservasi.php', 'active'=>false],
-        ['icon'=>'person',  'label'=>'Profil',   'href'=>'#',             'active'=>false],
+        ['icon'=>'history', 'label'=>'Riwayat',  'href'=>'riwayat.php',   'active'=>false],
+        ['icon'=>'person',  'label'=>'Profil',   'href'=>'profil.php',    'active'=>false],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']
@@ -146,19 +145,20 @@ try {
     <div class="grid md:grid-cols-2 gap-6 mb-8">
 
       <!-- Hanya Konsultasi Cepat -->
+      <!-- Akses Reservasi -->
       <div class="md:col-span-2 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl p-6 shadow-md">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div class="flex items-start gap-4">
             <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-              <span class="material-symbols-outlined text-white text-3xl">support_agent</span>
+              <span class="material-symbols-outlined text-white text-3xl">event_available</span>
             </div>
             <div>
-              <h3 class="text-xl font-bold mb-1">Konsultasi Cepat (Live)</h3>
-              <p class="text-blue-100 text-sm font-medium max-w-md">Butuh saran medis segera? Hubungi layanan dukungan kesehatan kami secara instan, 24/7 tanpa perlu membuat janji terlebih dahulu.</p>
+              <h3 class="text-xl font-bold mb-1">Buat Reservasi Baru</h3>
+              <p class="text-blue-100 text-sm font-medium max-w-md">Butuh penanganan medis? Jadwalkan konsultasi dengan dokter spesialis atau umum secara langsung dari sini.</p>
             </div>
           </div>
-          <a href="#" class="inline-flex items-center justify-center gap-2 bg-white text-blue-700 px-6 py-3 rounded-full text-sm font-bold hover:bg-blue-50 transition-colors shadow-lg active:scale-95 flex-shrink-0">
-            Mulai Konsultasi <span class="material-symbols-outlined text-[18px]">chat</span>
+          <a href="reservasi.php" class="inline-flex items-center justify-center gap-2 bg-white text-blue-700 px-6 py-3 rounded-full text-sm font-bold hover:bg-blue-50 transition-colors shadow-lg active:scale-95 flex-shrink-0">
+            Mulai Reservasi <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
           </a>
         </div>
       </div>
@@ -171,7 +171,6 @@ try {
           <span class="material-symbols-outlined text-blue-600 text-[20px]">event</span>
           Janji Temu Mendatang
         </h3>
-        <a href="reservasi.php" class="text-xs font-bold text-primary hover:underline">Lihat Semua</a>
       </div>
 
       <?php if (empty($upcoming)): ?>

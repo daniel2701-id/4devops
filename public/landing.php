@@ -113,8 +113,6 @@ $timeout = !empty($_GET['timeout']) ? 'Sesi Anda telah berakhir. Silakan masuk k
         <!-- Doctor Card (highlighted) -->
         <div
           class="bg-primary-fixed text-on-surface rounded-2xl border-2 border-primary p-8 shadow-md relative flex flex-col">
-          <div class="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-2.5 py-0.5 rounded-full">Populer
-          </div>
           <div class="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center mb-6 mt-2">
             <span class="material-symbols-outlined">stethoscope</span>
           </div>
