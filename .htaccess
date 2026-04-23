@@ -1,0 +1,49 @@
+Options -Indexes -MultiViews
+ServerSignature Off
+
+# ---- Protect sensitive directories ----
+<FilesMatch "\.(sql|log|env|md|json|lock|sh|bak)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# ---- Block direct access to config/includes ----
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^includes/ - [F,L]
+    RewriteRule ^database/ - [F,L]
+</IfModule>
+
+# ---- Security Headers (supplement PHP headers) ----
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # Uncomment for HTTPS:
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# ---- PHP settings ----
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite Strict
+    php_value session.use_strict_mode 1
+    php_value session.use_only_cookies 1
+    php_value expose_php Off
+</IfModule>
+
+# ---- Disable server-side includes ----
+Options -Includes
+
+# ---- Prevent image hotlinking ----
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP_REFERER} !^$
+    RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?localhost [NC]
+</IfModule>
+
+# ---- Charset ----
+AddDefaultCharset UTF-8
