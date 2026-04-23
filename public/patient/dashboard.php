@@ -46,26 +46,26 @@ try {
 <div class="flex min-h-screen">
 
   <!-- Sidebar -->
-  <aside class="w-64 bg-surface border-r border-outline-variant flex-shrink-0 flex flex-col hidden md:flex">
-    <div class="p-6 border-b border-outline-variant">
+  <aside class="w-64 bg-blue-700 text-white flex-shrink-0 flex flex-col hidden md:flex shadow-xl">
+    <div class="p-6 border-b border-blue-600/50">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-primary-fixed flex items-center justify-center rounded-lg transform rotate-45">
-          <span class="material-symbols-outlined text-primary transform -rotate-45 text-[16px]" style="font-variation-settings:'FILL' 1;">medical_services</span>
+        <div class="w-8 h-8 bg-white/20 flex items-center justify-center rounded-lg transform rotate-45">
+          <span class="material-symbols-outlined text-white transform -rotate-45 text-[16px]" style="font-variation-settings:'FILL' 1;">medical_services</span>
         </div>
-        <span class="font-extrabold tracking-tight text-on-surface text-lg">CareConnect</span>
+        <span class="font-extrabold tracking-tight text-white text-lg">CareConnect</span>
       </div>
-      <div class="mt-1 text-xs text-on-surface-variant font-medium ml-10">Portal Kesehatan</div>
+      <div class="mt-1 text-xs text-blue-200 font-medium ml-10">Portal Kesehatan</div>
     </div>
 
     <!-- User -->
-    <div class="p-4 border-b border-outline-variant">
+    <div class="p-4 border-b border-blue-600/50">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-primary-fixed text-primary rounded-full flex items-center justify-center font-bold text-sm">
+        <div class="w-10 h-10 bg-white/20 text-white rounded-full flex items-center justify-center font-bold text-sm">
           <?= e(initials($user['name'])) ?>
         </div>
         <div>
-          <p class="text-sm font-bold text-on-surface"><?= e($user['name']) ?></p>
-          <p class="text-xs text-on-surface-variant">Pasien</p>
+          <p class="text-sm font-bold text-white"><?= e($user['name']) ?></p>
+          <p class="text-xs text-blue-200">Pasien</p>
         </div>
       </div>
     </div>
@@ -74,13 +74,15 @@ try {
     <nav class="flex-1 p-4 space-y-1">
       <?php
       $navItems = [
-        ['icon'=>'home',  'label'=>'Beranda',  'href'=>'dashboard.php', 'active'=>true],
-        ['icon'=>'event', 'label'=>'Reservasi','href'=>'reservasi.php', 'active'=>false],
+        ['icon'=>'home',    'label'=>'Beranda',  'href'=>'dashboard.php', 'active'=>true],
+        ['icon'=>'event',   'label'=>'Reservasi','href'=>'reservasi.php', 'active'=>false],
+        ['icon'=>'history', 'label'=>'Riwayat',  'href'=>'reservasi.php', 'active'=>false],
+        ['icon'=>'person',  'label'=>'Profil',   'href'=>'#',             'active'=>false],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']
-          ? 'bg-primary-fixed text-primary font-bold'
-          : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium';
+          ? 'bg-white/20 text-white font-bold shadow-sm'
+          : 'text-blue-100 hover:bg-white/10 hover:text-white font-medium';
       ?>
       <a href="<?= e($item['href']) ?>"
          class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm <?= $cls ?>">
@@ -91,9 +93,9 @@ try {
     </nav>
 
     <!-- Logout -->
-    <div class="p-4 border-t border-outline-variant">
+    <div class="p-4 border-t border-blue-600/50">
       <a href="<?= APP_URL ?>/patient/logout.php"
-         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-error/10 hover:text-error transition-colors">
+         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-blue-200 hover:bg-red-500/20 hover:text-red-200 transition-colors">
         <span class="material-symbols-outlined text-[20px]">logout</span>
         Keluar
       </a>
@@ -143,37 +145,21 @@ try {
     <!-- Quick Actions -->
     <div class="grid md:grid-cols-2 gap-6 mb-8">
 
-      <!-- Quick Konsultasi -->
-      <div class="bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl p-6 shadow-md">
-        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
-          <span class="material-symbols-outlined text-white text-2xl">chat_bubble</span>
-        </div>
-        <h3 class="text-lg font-bold mb-1">Konsultasi Cepat</h3>
-        <p class="text-blue-200 text-sm font-medium mb-5">Butuh saran medis segera? Hubungi dokter umum kami dalam hitungan menit.</p>
-        <a href="#" class="inline-flex items-center gap-1 bg-white text-blue-700 px-4 py-2 rounded-full text-sm font-bold hover:bg-blue-50 transition-colors">
-          Mulai Konsultasi
-          <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-        </a>
-      </div>
-
-      <!-- Quick Access Grid -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Akses Cepat</h3>
-        <div class="grid grid-cols-2 gap-3">
-          <?php
-          $quick = [
-            ['icon'=>'event_available','label'=>'Reservasi Baru', 'color'=>'blue',   'href'=>'reservasi.php'],
-            ['icon'=>'history_edu',    'label'=>'Riwayat Medis',  'color'=>'purple', 'href'=>'reservasi.php'],
-            ['icon'=>'medication',     'label'=>'Resep Obat',     'color'=>'teal',   'href'=>'reservasi.php'],
-            ['icon'=>'stethoscope',    'label'=>'Info Dokter',    'color'=>'pink',   'href'=>'reservasi.php'],
-          ];
-          foreach ($quick as $q):
-          ?>
-          <a href="<?= $q['href'] ?>" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-<?= $q['color'] ?>-50 text-<?= $q['color'] ?>-600 hover:bg-<?= $q['color'] ?>-100 transition-colors text-center">
-            <span class="material-symbols-outlined text-[24px]"><?= $q['icon'] ?></span>
-            <span class="text-xs font-bold"><?= e($q['label']) ?></span>
+      <!-- Hanya Konsultasi Cepat -->
+      <div class="md:col-span-2 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl p-6 shadow-md">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="flex items-start gap-4">
+            <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-white text-3xl">support_agent</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold mb-1">Konsultasi Cepat (Live)</h3>
+              <p class="text-blue-100 text-sm font-medium max-w-md">Butuh saran medis segera? Hubungi layanan dukungan kesehatan kami secara instan, 24/7 tanpa perlu membuat janji terlebih dahulu.</p>
+            </div>
+          </div>
+          <a href="#" class="inline-flex items-center justify-center gap-2 bg-white text-blue-700 px-6 py-3 rounded-full text-sm font-bold hover:bg-blue-50 transition-colors shadow-lg active:scale-95 flex-shrink-0">
+            Mulai Konsultasi <span class="material-symbols-outlined text-[18px]">chat</span>
           </a>
-          <?php endforeach; ?>
         </div>
       </div>
     </div>
