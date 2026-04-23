@@ -4,17 +4,17 @@
 // ============================================================
 
 // ----- Environment -------------------------------------------
-define('APP_ENV',     'development');   // 'production' in prod
+define('APP_ENV',     'production');    // set to 'development' for local testing
 define('APP_NAME',    'CareConnect');
-define('APP_URL',     'http://localhost/careconnect/public');
+define('APP_URL',     'https://neywebsite.online/careconnect/public');
 define('APP_VERSION', '1.0.0');
 
 // ----- Database ----------------------------------------------
 define('DB_HOST', '127.0.0.1');
 define('DB_PORT', '3306');
 define('DB_NAME', 'careconnect');
-define('DB_USER', 'root');        // change in production
-define('DB_PASS', '');            // change in production
+define('DB_USER', 'careconnect_user');  // ganti sesuai user MySQL di server
+define('DB_PASS', 'password_anda');     // ganti sesuai password MySQL di server
 define('DB_CHARSET', 'utf8mb4');
 
 // ----- Security ----------------------------------------------

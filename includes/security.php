@@ -16,17 +16,18 @@ function send_security_headers(): void
     header('X-XSS-Protection: 1; mode=block');
     // Referrer
     header('Referrer-Policy: strict-origin-when-cross-origin');
+    // HSTS – force HTTPS for 1 year (production)
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
     // Content-Security-Policy – allow Tailwind CDN + Google Fonts + Material Icons
     $csp  = "default-src 'self'; ";
-    $csp .= "script-src 'self' https://cdn.tailwindcss.com; ";
+    $csp .= "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; ";
     $csp .= "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; ";
-    $csp .= "font-src 'self' https://fonts.gstatic.com; ";
+    $csp .= "font-src 'self' https://fonts.gstatic.com data:; ";
     $csp .= "img-src 'self' data: https:; ";
-    $csp .= "connect-src 'self'; ";
+    $csp .= "connect-src 'self' https://cdn.tailwindcss.com; ";
+    $csp .= "worker-src 'self' blob:; ";
     $csp .= "frame-ancestors 'none';";
     header('Content-Security-Policy: ' . $csp);
-    // HSTS (enable in production with HTTPS only)
-    // header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
 }
 
 // -------------------------------------------------------
@@ -40,9 +41,9 @@ function secure_session_start(): void
             'lifetime' => 0,                  // browser-session cookie
             'path'     => '/',
             'domain'   => '',
-            'secure'   => false,              // set TRUE when using HTTPS
+            'secure'   => true,               // TRUE karena pakai HTTPS
             'httponly' => true,               // no JS access
-            'samesite' => 'Strict',
+            'samesite' => 'Lax',             // Lax agar redirect antar halaman tidak putus session
         ]);
         session_start();
 
