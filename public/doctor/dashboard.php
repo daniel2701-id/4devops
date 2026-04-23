@@ -199,7 +199,7 @@ try {
                   </td>
                   <td class="px-6 py-4">
                     <?php if ($appt['status'] === 'waiting'): ?>
-                    <button class="text-xs font-bold text-primary hover:underline">Mulai Sesi</button>
+                    <a href="jadwal.php" class="text-xs font-bold text-primary hover:underline">Kelola Sesi</a>
                     <?php endif; ?>
                   </td>
                 </tr>
@@ -229,23 +229,19 @@ try {
           <?php if ($nextAppt['reason']): ?>
           <p class="text-xs font-medium text-slate-600 bg-white/60 rounded-xl p-3"><?= e($nextAppt['reason']) ?></p>
           <?php endif; ?>
-          <button class="w-full mt-4 py-2 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-light transition-colors">
-            Start Session
-          </button>
+          <a href="jadwal.php" class="w-full mt-4 py-2 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-light transition-colors text-center block">
+            Kelola di Jadwal
+          </a>
         </div>
         <?php endif; ?>
 
         <!-- Quick Actions -->
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Quick Actions</h4>
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Aksi Cepat</h4>
         <div class="space-y-2">
-          <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-primary-fixed text-slate-700 hover:text-primary transition-colors text-sm font-medium">
-            <span class="material-symbols-outlined text-[20px]">medication</span>
-            Buat Resep
-          </button>
-          <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-primary-fixed text-slate-700 hover:text-primary transition-colors text-sm font-medium">
-            <span class="material-symbols-outlined text-[20px]">note_add</span>
-            Catatan Medis Baru
-          </button>
+          <a href="jadwal.php" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-primary-fixed text-slate-700 hover:text-primary transition-colors text-sm font-medium">
+            <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+            Kelola Sesi Konsultasi
+          </a>
         </div>
       </div>
 

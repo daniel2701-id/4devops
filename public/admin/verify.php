@@ -127,17 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </p>
       </div>
 
-      <!-- Demo OTP Display (remove in production!) -->
-      <?php if ($demoOtp): ?>
-      <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 mb-6 flex items-start gap-2">
-        <span class="material-symbols-outlined text-amber-400 text-[18px] mt-0.5 flex-shrink-0">developer_mode</span>
-        <div>
-          <p class="text-amber-300 text-xs font-bold uppercase tracking-wider">Demo Mode</p>
-          <p class="text-amber-200 text-sm font-bold tracking-[0.3em] mt-0.5"><?= e($demoOtp) ?></p>
-          <p class="text-amber-400/60 text-xs mt-0.5">Remove this in production – send via email instead</p>
-        </div>
-      </div>
-      <?php endif; ?>
+      <!-- OTP Display has been completely removed for security -->
 
       <?php if ($resent): ?>
       <div class="bg-teal-500/10 border border-teal-500/30 rounded-xl px-4 py-3 mb-4 text-teal-400 text-sm font-medium">

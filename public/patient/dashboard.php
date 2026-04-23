@@ -187,14 +187,14 @@ try {
           <span class="material-symbols-outlined text-blue-600 text-[20px]">event</span>
           Janji Temu Mendatang
         </h3>
-        <a href="#" class="text-xs font-bold text-blue-600 hover:underline">Lihat Semua</a>
+        <a href="reservasi.php" class="text-xs font-bold text-primary hover:underline">Lihat Semua</a>
       </div>
 
       <?php if (empty($upcoming)): ?>
       <div class="p-12 text-center text-slate-400">
         <span class="material-symbols-outlined text-[48px] text-slate-300">event_busy</span>
         <p class="font-medium mt-3">Belum ada janji temu mendatang.</p>
-        <a href="#" class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-blue-600 hover:underline">
+        <a href="reservasi.php" class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline">
           <span class="material-symbols-outlined text-[16px]">add_circle</span>
           Buat Reservasi
         </a>

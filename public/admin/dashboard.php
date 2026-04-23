@@ -78,19 +78,19 @@ try {
     <nav class="flex-1 p-4 space-y-1">
       <?php
       $navItems = [
-        ['icon'=>'dashboard',   'label'=>'Beranda',        'active'=>true],
-        ['icon'=>'stethoscope', 'label'=>'Daftar Dokter',  'active'=>false],
-        ['icon'=>'event',       'label'=>'Reservasi',      'active'=>false],
-        ['icon'=>'group',       'label'=>'Pasien',         'active'=>false],
-        ['icon'=>'history',     'label'=>'Riwayat',        'active'=>false],
-        ['icon'=>'person',      'label'=>'Profil',         'active'=>false],
+        ['icon'=>'dashboard',   'label'=>'Beranda',        'href'=>'dashboard.php', 'active'=>true],
+        ['icon'=>'stethoscope', 'label'=>'Daftar Dokter',  'href'=>'doctors.php',   'active'=>false],
+        ['icon'=>'event',       'label'=>'Reservasi',      'href'=>'#',             'active'=>false],
+        ['icon'=>'group',       'label'=>'Pasien',         'href'=>'#',             'active'=>false],
+        ['icon'=>'history',     'label'=>'Riwayat',        'href'=>'#',             'active'=>false],
+        ['icon'=>'person',      'label'=>'Profil',         'href'=>'#',             'active'=>false],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']
           ? 'bg-primary-fixed text-primary font-bold'
           : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-medium';
       ?>
-      <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm <?= $cls ?>">
+      <a href="<?= e($item['href']) ?>" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm <?= $cls ?>">
         <span class="material-symbols-outlined text-[20px]"><?= $item['icon'] ?></span>
         <?= e($item['label']) ?>
       </a>
