@@ -57,68 +57,18 @@ $doctors = $pdo->query(
 <?= google_fonts() ?>
 <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex">
-
-  <!-- Sidebar -->
-  <aside class="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex-col hidden md:flex">
-    <div class="p-6 border-b border-slate-100">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-blue-50 flex items-center justify-center rounded-lg transform rotate-45">
-          <span class="material-symbols-outlined text-blue-600 transform -rotate-45 text-[16px]" style="font-variation-settings:'FILL' 1;">medical_services</span>
-        </div>
-        <span class="font-extrabold tracking-tight text-slate-900 text-lg">CareConnect</span>
-      </div>
-      <div class="mt-1 text-xs text-slate-500 font-medium ml-10">Portal Kesehatan</div>
-    </div>
-
-    <!-- User -->
-    <div class="p-4 border-b border-slate-100">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
-          <?= e(initials($user['name'])) ?>
-        </div>
-        <div>
-          <p class="text-sm font-bold text-slate-800"><?= e($user['name']) ?></p>
-          <p class="text-xs text-slate-400">Pasien</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Nav -->
-    <nav class="flex-1 p-4 space-y-1">
-      <?php
-      $navItems = [
-        ['icon'=>'home','label'=>'Beranda',       'href'=>'dashboard.php', 'active'=>false],
-        ['icon'=>'event','label'=>'Reservasi',     'href'=>'reservasi.php', 'active'=>true],
-        ['icon'=>'history','label'=>'Riwayat',     'href'=>'#', 'active'=>false],
-        ['icon'=>'person','label'=>'Profil',       'href'=>'#', 'active'=>false],
-      ];
-      foreach ($navItems as $item):
-        $cls = $item['active']
-          ? 'bg-blue-50 text-blue-700 font-bold'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-medium';
-      ?>
-      <a href="<?= e($item['href']) ?>"
-         class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm <?= $cls ?>">
-        <span class="material-symbols-outlined text-[20px]"><?= $item['icon'] ?></span>
-        <?= e($item['label']) ?>
-      </a>
-      <?php endforeach; ?>
-    </nav>
-
-    <!-- Logout -->
-    <div class="p-4 border-t border-slate-100">
-      <a href="<?= APP_URL ?>/patient/logout.php"
-         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors">
-        <span class="material-symbols-outlined text-[20px]">logout</span>
-        Keluar
-      </a>
-    </div>
-  </aside>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
 
   <!-- Main Content -->
   <main class="flex-1 p-6 lg:p-8 overflow-auto">
-    <div class="max-w-3xl mx-auto">
+    <div class="max-w-3xl mx-auto w-full">
+      
+      <div class="mb-6">
+        <a href="dashboard.php" class="inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-700 transition-colors bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            Kembali ke Dashboard
+        </a>
+      </div>
       
       <div class="mb-8 flex items-center gap-4">
         <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
