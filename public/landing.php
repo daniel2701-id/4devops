@@ -74,7 +74,7 @@ $timeout = !empty($_GET['timeout']) ? 'Sesi Anda telah berakhir. Silakan masuk k
       <div class="text-center mb-14">
         <h2 class="text-3xl font-black text-on-surface tracking-tight">Solusi Untuk Setiap Peran</h2>
         <p class="text-base font-medium text-on-surface-variant mt-4 max-w-xl mx-auto">
-          Andi Daniel Tenri Dio.
+          Platform kami dirancang untuk mengoptimalkan alur kerja setiap individu dalam ekosistem klinik Anda.
         </p>
       </div>
 
