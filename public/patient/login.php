@@ -167,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="login-email">Email Anda</label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">mail</span>
-            <input type="email" id="login-email" name="email" placeholder="contoh@email.com" required
+            <input type="email" id="login-email" name="email" placeholder="contoh@email.com" required autocomplete="off"
               class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-blue-200 outline-none placeholder-slate-400 shadow-sm transition-all"
               value="<?= e($_POST['email'] ?? '') ?>">
           </div>
@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="login-password">Kata Sandi</label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">lock</span>
-            <input type="password" id="login-password" name="password" placeholder="••••••••" required
+            <input type="password" id="login-password" name="password" placeholder="••••••••" required autocomplete="new-password"
               class="w-full h-[52px] pl-12 pr-12 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-blue-200 outline-none placeholder-slate-400 shadow-sm transition-all">
             <button type="button" onclick="togglePassword('login-password', this)" class="absolute right-4 text-slate-400 hover:text-primary transition-colors">
               <span class="material-symbols-outlined text-[20px]">visibility_off</span>
@@ -219,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="reg-email">Email</label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">mail</span>
-            <input type="email" id="reg-email" name="email" placeholder="contoh@email.com" required
+            <input type="email" id="reg-email" name="email" placeholder="contoh@email.com" required autocomplete="off"
               class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-blue-200 outline-none placeholder-slate-400 shadow-sm transition-all"
               value="<?= e($_POST['email'] ?? '') ?>">
           </div>
@@ -229,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="reg-password">Kata Sandi</label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">lock</span>
-            <input type="password" id="reg-password" name="password" placeholder="Min 8 karakter" required
+            <input type="password" id="reg-password" name="password" placeholder="Min 8 karakter" required autocomplete="new-password"
               class="w-full h-[52px] pl-12 pr-12 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-blue-200 outline-none placeholder-slate-400 shadow-sm transition-all">
             <button type="button" onclick="togglePassword('reg-password', this)" class="absolute right-4 text-slate-400 hover:text-primary transition-colors">
               <span class="material-symbols-outlined text-[20px]">visibility_off</span>

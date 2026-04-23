@@ -5,27 +5,36 @@ require_role('admin');
 $user = current_user();
 $pdo  = db();
 
-// Stats
-$totalPatients = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role='patient'")->fetchColumn();
-$activeDoctors = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role='doctor' AND is_active=1")->fetchColumn();
-$activeAppts   = (int) $pdo->query("SELECT COUNT(*) FROM appointments WHERE status IN ('waiting','in_session')")->fetchColumn();
-$pendingConf   = (int) $pdo->query("SELECT COUNT(*) FROM appointments WHERE status='waiting'")->fetchColumn();
+// Stats defaults
+$totalPatients = 0;
+$activeDoctors = 0;
+$activeAppts   = 0;
+$pendingConf   = 0;
+$recentLogs    = [];
+$recentAppts   = [];
 
-// Recent audit logs
-$recentLogs = $pdo->query(
-    "SELECT al.*, u.name AS user_name FROM audit_logs al
-     LEFT JOIN users u ON u.id = al.user_id
-     ORDER BY al.created_at DESC LIMIT 8"
-)->fetchAll();
+try {
+    $totalPatients = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role='patient'")->fetchColumn();
+    $activeDoctors = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role='doctor' AND is_active=1")->fetchColumn();
+    $activeAppts   = (int) $pdo->query("SELECT COUNT(*) FROM appointments WHERE status IN ('waiting','in_session')")->fetchColumn();
+    $pendingConf   = (int) $pdo->query("SELECT COUNT(*) FROM appointments WHERE status='waiting'")->fetchColumn();
 
-// Recent appointments
-$recentAppts = $pdo->query(
-    "SELECT a.*, p.name AS patient_name, d.name AS doctor_name
-     FROM appointments a
-     JOIN users p ON p.id = a.patient_id
-     JOIN users d ON d.id = a.doctor_id
-     ORDER BY a.created_at DESC LIMIT 5"
-)->fetchAll();
+    $recentLogs = $pdo->query(
+        "SELECT al.*, u.name AS user_name FROM audit_logs al
+         LEFT JOIN users u ON u.id = al.user_id
+         ORDER BY al.created_at DESC LIMIT 8"
+    )->fetchAll();
+
+    $recentAppts = $pdo->query(
+        "SELECT a.*, p.name AS patient_name, d.name AS doctor_name
+         FROM appointments a
+         JOIN users p ON p.id = a.patient_id
+         JOIN users d ON d.id = a.doctor_id
+         ORDER BY a.created_at DESC LIMIT 5"
+    )->fetchAll();
+} catch (Exception $e) {
+    // Graceful degradation
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">

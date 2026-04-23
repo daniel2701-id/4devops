@@ -6,22 +6,33 @@ $user = current_user();
 $pdo  = db();
 $today = date('Y-m-d');
 
-// Today's appointments
-$stmt = $pdo->prepare(
-    'SELECT a.*, u.name AS patient_name
-     FROM appointments a
-     JOIN users u ON u.id = a.patient_id
-     WHERE a.doctor_id = ? AND DATE(a.scheduled_at) = ?
-     ORDER BY a.scheduled_at ASC'
-);
-$stmt->execute([$user['id'], $today]);
-$todayAppts = $stmt->fetchAll();
+$todayAppts = [];
+$totalToday   = 0;
+$completed    = 0;
+$pending      = 0;
+$inSession    = [];
+$nextAppt     = null;
 
-$totalToday   = count($todayAppts);
-$completed    = count(array_filter($todayAppts, fn($a) => $a['status'] === 'finished'));
-$pending      = count(array_filter($todayAppts, fn($a) => $a['status'] === 'waiting'));
-$inSession    = array_values(array_filter($todayAppts, fn($a) => $a['status'] === 'in_session'));
-$nextAppt     = $inSession[0] ?? (array_values(array_filter($todayAppts, fn($a) => $a['status'] === 'waiting'))[0] ?? null);
+try {
+    // Today's appointments
+    $stmt = $pdo->prepare(
+        'SELECT a.*, u.name AS patient_name
+         FROM appointments a
+         JOIN users u ON u.id = a.patient_id
+         WHERE a.doctor_id = ? AND DATE(a.scheduled_at) = ?
+         ORDER BY a.scheduled_at ASC'
+    );
+    $stmt->execute([$user['id'], $today]);
+    $todayAppts = $stmt->fetchAll();
+
+    $totalToday   = count($todayAppts);
+    $completed    = count(array_filter($todayAppts, fn($a) => $a['status'] === 'finished'));
+    $pending      = count(array_filter($todayAppts, fn($a) => $a['status'] === 'waiting'));
+    $inSession    = array_values(array_filter($todayAppts, fn($a) => $a['status'] === 'in_session'));
+    $nextAppt     = $inSession[0] ?? (array_values(array_filter($todayAppts, fn($a) => $a['status'] === 'waiting'))[0] ?? null);
+} catch (Exception $e) {
+    // Graceful degradation
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">

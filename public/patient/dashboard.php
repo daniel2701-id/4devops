@@ -5,22 +5,29 @@ require_role('patient');
 $user = current_user();
 $pdo  = db();
 
-// Upcoming appointments
-$stmt = $pdo->prepare(
-    'SELECT a.*, u.name AS doctor_name, dp.specialization
-     FROM appointments a
-     JOIN users u ON u.id = a.doctor_id
-     LEFT JOIN doctor_profiles dp ON dp.user_id = a.doctor_id
-     WHERE a.patient_id = ? AND a.scheduled_at >= NOW() AND a.status != ?
-     ORDER BY a.scheduled_at ASC LIMIT 5'
-);
-$stmt->execute([$user['id'], 'cancelled']);
-$upcoming = $stmt->fetchAll();
+$upcoming = [];
+$pastCount = 0;
 
-// Past appointments count
-$stmt2 = $pdo->prepare('SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND status = ?');
-$stmt2->execute([$user['id'], 'finished']);
-$pastCount = (int) $stmt2->fetchColumn();
+try {
+    // Upcoming appointments
+    $stmt = $pdo->prepare(
+        'SELECT a.*, u.name AS doctor_name, dp.specialization
+         FROM appointments a
+         JOIN users u ON u.id = a.doctor_id
+         LEFT JOIN doctor_profiles dp ON dp.user_id = a.doctor_id
+         WHERE a.patient_id = ? AND a.scheduled_at >= NOW() AND a.status != ?
+         ORDER BY a.scheduled_at ASC LIMIT 5'
+    );
+    $stmt->execute([$user['id'], 'cancelled']);
+    $upcoming = $stmt->fetchAll();
+
+    // Past appointments count
+    $stmt2 = $pdo->prepare('SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND status = ?');
+    $stmt2->execute([$user['id'], 'finished']);
+    $pastCount = (int) $stmt2->fetchColumn();
+} catch (Exception $e) {
+    // Graceful degradation
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">

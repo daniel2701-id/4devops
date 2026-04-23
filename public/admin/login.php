@@ -6,35 +6,58 @@ if (is_logged_in() && ($_SESSION['user_role'] ?? '') === 'admin') {
     exit;
 }
 
-$error = '';
+$error   = '';
+$success = '';
+$tab     = $_GET['tab'] ?? 'login';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_abort();
-    $email    = sanitize_email($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $tab = $_POST['tab'] ?? 'login';
 
-    if (empty($email) || empty($password)) {
-        $error = 'Isi semua kolom.';
-    } else {
-        $result = attempt_login($email, $password, 'admin');
-        if ($result['success']) {
-            // Don't create full session yet — need OTP
-            $_SESSION['admin_pending_id']    = $result['user']['id'];
-            $_SESSION['admin_pending_name']  = $result['user']['name'];
-            $_SESSION['admin_pending_email'] = $result['user']['email'];
+    if ($tab === 'login') {
+        $email    = sanitize_email($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
 
-            // Generate OTP
-            $otp = generate_otp((int) $result['user']['id']);
-
-            // In production: send via email (PHPMailer/SMTP)
-            // For demo: store in session so verify page can show it
-            $_SESSION['admin_otp_demo'] = $otp;
-
-            audit_log('admin_otp_sent', (int) $result['user']['id']);
-            header('Location: ' . APP_URL . '/admin/verify.php');
-            exit;
+        if (empty($email) || empty($password)) {
+            $error = 'Isi semua kolom.';
+        } else {
+            $result = attempt_login($email, $password, 'admin');
+            if ($result['success']) {
+                // Generate OTP & redirect
+                $_SESSION['admin_pending_id']    = $result['user']['id'];
+                $_SESSION['admin_pending_name']  = $result['user']['name'];
+                $_SESSION['admin_pending_email'] = $result['user']['email'];
+                $_SESSION['admin_otp_demo']      = generate_otp((int) $result['user']['id']);
+                audit_log('admin_otp_sent', (int) $result['user']['id']);
+                header('Location: ' . APP_URL . '/admin/verify.php');
+                exit;
+            }
+            $error = $result['message'];
         }
-        $error = $result['message'];
+    } elseif ($tab === 'register') {
+        $name     = sanitize_string($_POST['name'] ?? '', 150);
+        $email    = sanitize_email($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $confirm  = $_POST['confirm_password'] ?? '';
+
+        $passErrors = validate_password_strength($password);
+        if (empty($name) || empty($email) || empty($password)) {
+            $error = 'Isi semua kolom.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = 'Format email tidak valid.';
+        } elseif ($password !== $confirm) {
+            $error = 'Konfirmasi kata sandi tidak cocok.';
+        } elseif (!empty($passErrors)) {
+            $error = 'Kata sandi: ' . implode(', ', $passErrors) . '.';
+        } else {
+            $result = register_admin($name, $email, $password);
+            if ($result['success']) {
+                $success = 'Pendaftaran admin berhasil! Silakan masuk.';
+                $tab = 'login';
+            } else {
+                $error = $result['message'];
+            }
+        }
     }
 }
 ?>
@@ -43,20 +66,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CareConnect – Admin Portal Login</title>
+<title>CareConnect – Admin Portal</title>
 <?= tailwind_cdn() ?>
 <?= tailwind_config('#0f766e') ?>  <!-- teal primary for admin -->
 <?= google_fonts() ?>
 <style>
   body { font-family: 'Inter', sans-serif; }
-  :root { --primary-admin: #0f766e; }
+  .tab-active { background: #0f766e; color: white !important; }
 </style>
 </head>
 <body class="bg-slate-950 text-white antialiased min-h-screen">
 
 <div class="min-h-screen flex w-full">
 
-  <!-- Left Panel – Dark Teal Admin -->
+  <!-- Left Panel -->
   <div class="hidden md:flex md:w-1/2 relative overflow-hidden flex-col justify-between p-12 bg-slate-900">
     <div class="absolute inset-0" style="background:linear-gradient(160deg,#134e4a 0%,#0c1a19 100%);"></div>
     <div class="absolute inset-0 opacity-5" style="background:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:12px 12px;"></div>
@@ -69,39 +92,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="relative z-10 max-w-md mt-auto mb-10">
-      <h1 class="text-3xl font-black text-white mb-4 leading-tight">
-        Secure Access for Healthcare Administrators.
-      </h1>
-      <p class="text-slate-400 text-sm font-medium mb-8">
-        Streamline your clinic's operations, manage staff securely, and maintain compliance with our enterprise-grade administration platform.
-      </p>
-
-      <div class="space-y-4">
-        <div class="flex items-start gap-3 bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
-          <div class="w-8 h-8 bg-teal-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-            <span class="material-symbols-outlined text-teal-400 text-[18px]">lock</span>
-          </div>
-          <div>
-            <h4 class="text-white font-bold text-sm mb-0.5">End-to-End Encryption</h4>
-            <p class="text-slate-400 text-xs">All patient and clinic data is securely encrypted at rest and in transit.</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-3 bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
-          <div class="w-8 h-8 bg-teal-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-            <span class="material-symbols-outlined text-teal-400 text-[18px]">manage_accounts</span>
-          </div>
-          <div>
-            <h4 class="text-white font-bold text-sm mb-0.5">Role-Based Access Control</h4>
-            <p class="text-slate-400 text-xs">Granular permissions ensure staff only see what they need to.</p>
-          </div>
-        </div>
-      </div>
+      <h1 class="text-3xl font-black text-white mb-4 leading-tight">Secure Access for Healthcare Administrators.</h1>
+      <p class="text-slate-400 text-sm font-medium mb-8">Streamline your clinic's operations, manage staff securely, and maintain compliance.</p>
     </div>
 
     <div class="relative z-10 text-slate-500 text-xs font-medium">© 2024 MediCare Pro Systems. All rights reserved.</div>
   </div>
 
-  <!-- Right Panel: Form -->
+  <!-- Right Panel -->
   <div class="w-full md:w-1/2 flex flex-col items-center justify-center p-6 lg:p-12 bg-slate-950">
     <div class="w-full max-w-[420px]">
 
@@ -111,66 +109,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </a>
 
       <div class="mb-6">
-        <h2 class="text-2xl font-black text-white mb-1">Admin Portal Login</h2>
-        <p class="text-sm font-medium text-slate-400">Welcome back. Please sign in to your account.</p>
+        <h2 class="text-2xl font-black text-white mb-1">Admin Portal</h2>
+        <p class="text-sm font-medium text-slate-400"><?= $tab === 'login' ? 'Sign in to your account.' : 'Create a new admin account.' ?></p>
       </div>
 
-      <!-- Restricted area notice -->
-      <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3 mb-6 flex items-start gap-2">
-        <span class="material-symbols-outlined text-yellow-400 text-[18px] mt-0.5 flex-shrink-0">warning</span>
-        <p class="text-yellow-300 text-xs font-medium">
-          Restricted Area. Authorized administrative personnel only. All access is logged and monitored.
-        </p>
+      <?= alert_html($error, 'error') ?>
+      <?= alert_html($success, 'success') ?>
+
+      <!-- Tab Switcher -->
+      <div class="flex bg-slate-800 rounded-xl p-1 mb-6 border border-slate-700">
+        <button type="button" onclick="switchTab('login')" id="btn-login" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all <?= $tab === 'login' ? 'tab-active' : 'text-slate-400 hover:text-white' ?>">Masuk</button>
+        <button type="button" onclick="switchTab('register')" id="btn-register" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all <?= $tab === 'register' ? 'tab-active' : 'text-slate-400 hover:text-white' ?>">Daftar</button>
       </div>
 
-      <?php if ($error): ?>
-      <div class="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 mb-4 text-red-400 text-sm font-medium">
-        <?= e($error) ?>
-      </div>
-      <?php endif; ?>
-
-      <form method="POST" class="flex flex-col gap-5">
+      <!-- Login Form -->
+      <form id="form-login" method="POST" class="flex flex-col gap-5 <?= $tab !== 'login' ? 'hidden' : '' ?>">
         <?= csrf_field() ?>
+        <input type="hidden" name="tab" value="login">
 
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1" for="email">Email Address</label>
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-4 text-slate-500 text-[20px]">alternate_email</span>
-            <input type="email" id="email" name="email" placeholder="admin@mercygeneral.org" required
-              class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm font-medium focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none placeholder-slate-600 transition-all"
-              value="<?= e($_POST['email'] ?? '') ?>">
+            <input type="email" name="email" placeholder="admin@careconnect.id" required autocomplete="off" class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none" value="<?= e($_POST['email'] ?? '') ?>">
           </div>
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1" for="password">Password</label>
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Password</label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-4 text-slate-500 text-[20px]">lock</span>
-            <input type="password" id="password" name="password" placeholder="••••••••" required
-              class="w-full h-[52px] pl-12 pr-12 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm font-medium focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none placeholder-slate-600 transition-all">
-            <button type="button" onclick="togglePassword('password', this)" class="absolute right-4 text-slate-500 hover:text-teal-400 transition-colors">
-              <span class="material-symbols-outlined text-[20px]">visibility_off</span>
-            </button>
+            <input type="password" id="login-password" name="password" placeholder="••••••••" required autocomplete="new-password" class="w-full h-[52px] pl-12 pr-12 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none">
+            <button type="button" onclick="togglePassword('login-password', this)" class="absolute right-4 text-slate-500 hover:text-teal-400 transition-colors"><span class="material-symbols-outlined text-[20px]">visibility_off</span></button>
           </div>
         </div>
 
-        <a href="#" class="text-xs font-medium text-teal-400 hover:underline self-end">Forgot Password?</a>
-
-        <button type="submit"
-          class="w-full h-[52px] bg-teal-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-teal-500 transition-colors active:scale-95 shadow-[0_4px_14px_0_rgba(15,118,110,0.4)]">
-          Masuk Ke Portal
-          <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+        <button type="submit" class="w-full h-[52px] bg-teal-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-teal-500 transition-colors active:scale-95">
+          Login <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
         </button>
       </form>
 
-      <p class="text-center text-xs text-slate-500 mt-6">
-        Need Help? <a href="mailto:it@careconnect.id" class="text-teal-400 hover:underline">Contact IT Support</a>
-      </p>
+      <!-- Register Form -->
+      <form id="form-register" method="POST" class="flex flex-col gap-5 <?= $tab !== 'register' ? 'hidden' : '' ?>">
+        <?= csrf_field() ?>
+        <input type="hidden" name="tab" value="register">
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Nama Lengkap</label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-4 text-slate-500 text-[20px]">badge</span>
+            <input type="text" name="name" placeholder="Admin Name" required autocomplete="off" class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none" value="<?= e($_POST['name'] ?? '') ?>">
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-4 text-slate-500 text-[20px]">alternate_email</span>
+            <input type="email" name="email" placeholder="admin@careconnect.id" required autocomplete="off" class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none" value="<?= e($_POST['email'] ?? '') ?>">
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Password</label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-4 text-slate-500 text-[20px]">lock</span>
+            <input type="password" id="reg-password" name="password" placeholder="Min 8 karakter" required autocomplete="new-password" class="w-full h-[52px] pl-12 pr-12 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none">
+            <button type="button" onclick="togglePassword('reg-password', this)" class="absolute right-4 text-slate-500 hover:text-teal-400 transition-colors"><span class="material-symbols-outlined text-[20px]">visibility_off</span></button>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Konfirmasi Password</label>
+          <div class="relative flex items-center">
+            <span class="material-symbols-outlined absolute left-4 text-slate-500 text-[20px]">lock_reset</span>
+            <input type="password" name="confirm_password" placeholder="Ulangi password" required autocomplete="new-password" class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full h-[52px] bg-teal-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-teal-500 transition-colors active:scale-95">
+          Register Admin <span class="material-symbols-outlined text-[20px]">person_add</span>
+        </button>
+      </form>
+
     </div>
   </div>
 </div>
 
 <script>
+function switchTab(tab) {
+  document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+  
+  document.getElementById('btn-login').className = tab === 'login' ? 'flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active' : 'flex-1 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white';
+  document.getElementById('btn-register').className = tab === 'register' ? 'flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active' : 'flex-1 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white';
+}
+
 function togglePassword(id, btn) {
   const input = document.getElementById(id);
   const icon  = btn.querySelector('.material-symbols-outlined');

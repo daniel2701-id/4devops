@@ -165,3 +165,30 @@ function register_patient(string $name, string $email, string $password): array
         return ['success' => false, 'message' => 'Gagal mendaftar. Coba lagi.'];
     }
 }
+
+function register_admin(string $name, string $email, string $password): array
+{
+    $pdo = db();
+
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+        return ['success' => false, 'message' => 'Email sudah terdaftar.'];
+    }
+
+    $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+
+    try {
+        $stmt = $pdo->prepare(
+            'INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, ?, 1)'
+        );
+        $stmt->execute([$name, $email, $hash, 'admin']);
+        $userId = (int) $pdo->lastInsertId();
+
+        audit_log('register_admin', $userId);
+        return ['success' => true, 'user_id' => $userId];
+    } catch (Exception $e) {
+        error_log('Admin register error: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'Gagal mendaftar. Coba lagi.'];
+    }
+}
