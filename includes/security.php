@@ -98,6 +98,15 @@ function csrf_abort(): void
     }
 }
 
+function csrf_abort_get(): void
+{
+    $token = $_GET['_csrf_token'] ?? '';
+    if (empty($token) || !hash_equals(csrf_token(), $token)) {
+        http_response_code(403);
+        die('Invalid or missing CSRF token. Please go back and try again.');
+    }
+}
+
 // -------------------------------------------------------
 // 4.  Rate Limiting / Brute-Force Protection
 // -------------------------------------------------------

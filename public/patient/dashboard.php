@@ -7,6 +7,8 @@ $pdo  = db();
 
 $upcoming = [];
 $pastCount = 0;
+$unreadNotif = 0;
+$pendingReviewCount = 0;
 
 try {
     // Upcoming appointments
@@ -25,6 +27,20 @@ try {
     $stmt2 = $pdo->prepare('SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND status = ?');
     $stmt2->execute([$user['id'], 'finished']);
     $pastCount = (int) $stmt2->fetchColumn();
+
+    // Unread notifications
+    $notifStmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+    $notifStmt->execute([$user['id']]);
+    $unreadNotif = (int) $notifStmt->fetchColumn();
+
+    // Pending reviews (finished appointments without review)
+    $revStmt = $pdo->prepare(
+        "SELECT COUNT(*) FROM appointments a LEFT JOIN reviews r ON r.appointment_id = a.id
+         WHERE a.patient_id = ? AND a.status = 'finished' AND r.id IS NULL"
+    );
+    $revStmt->execute([$user['id']]);
+    $pendingReviewCount = (int) $revStmt->fetchColumn();
+
 } catch (Exception $e) {
     // Graceful degradation
 }
@@ -74,9 +90,13 @@ try {
     <nav class="flex-1 p-4 space-y-1">
       <?php
       $navItems = [
-        ['icon'=>'home',    'label'=>'Beranda',  'href'=>'dashboard.php', 'active'=>true],
-        ['icon'=>'history', 'label'=>'Riwayat',  'href'=>'riwayat.php',   'active'=>false],
-        ['icon'=>'person',  'label'=>'Profil',   'href'=>'profil.php',    'active'=>false],
+        ['icon'=>'home',          'label'=>'Beranda',   'href'=>'dashboard.php', 'active'=>true,  'badge'=>0],
+        ['icon'=>'history',       'label'=>'Riwayat',   'href'=>'riwayat.php',   'active'=>false, 'badge'=>0],
+        ['icon'=>'star',          'label'=>'Ulasan',    'href'=>'ulasan.php',    'active'=>false, 'badge'=>$pendingReviewCount],
+        ['icon'=>'notifications', 'label'=>'Notifikasi','href'=>'notifikasi.php','active'=>false, 'badge'=>$unreadNotif],
+        ['icon'=>'family_restroom','label'=>'Keluarga', 'href'=>'keluarga.php',  'active'=>false, 'badge'=>0],
+        ['icon'=>'chat',          'label'=>'Chat',      'href'=>'chat.php',      'active'=>false, 'badge'=>0],
+        ['icon'=>'person',        'label'=>'Profil',    'href'=>'profil.php',    'active'=>false, 'badge'=>0],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']
@@ -87,6 +107,9 @@ try {
          class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm <?= $cls ?>">
         <span class="material-symbols-outlined text-[20px]"><?= $item['icon'] ?></span>
         <?= e($item['label']) ?>
+        <?php if ($item['badge'] > 0): ?>
+        <span class="ml-auto bg-red-500 text-white text-xs font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center"><?= $item['badge'] ?></span>
+        <?php endif; ?>
       </a>
       <?php endforeach; ?>
     </nav>
@@ -120,19 +143,19 @@ try {
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
       <?php
       $stats = [
-        ['label'=>'Janji Mendatang', 'value'=>count($upcoming), 'icon'=>'event',           'color'=>'blue'],
-        ['label'=>'Riwayat Kunjungan','value'=>$pastCount,       'icon'=>'history_edu',     'color'=>'purple'],
-        ['label'=>'Resep Aktif',     'value'=>0,                 'icon'=>'medication',      'color'=>'teal'],
-        ['label'=>'Notifikasi',      'value'=>0,                 'icon'=>'notifications',   'color'=>'amber'],
+        ['label'=>'Janji Mendatang',  'value'=>count($upcoming),    'icon'=>'event',         'color'=>'blue'],
+        ['label'=>'Riwayat Kunjungan','value'=>$pastCount,          'icon'=>'history_edu',   'color'=>'purple'],
+        ['label'=>'Ulasan Tertunda',  'value'=>$pendingReviewCount, 'icon'=>'star',          'color'=>'amber'],
+        ['label'=>'Notifikasi Baru',  'value'=>$unreadNotif,        'icon'=>'notifications', 'color'=>'red'],
       ];
       foreach ($stats as $s):
         $bg   = "bg-{$s['color']}-50";
         $text = "text-{$s['color']}-600";
       ?>
       <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-        <div class="flex items-center justify-between mb-3">
-          <div class="w-10 h-10 <?= $bg ?> <?= $text ?> rounded-xl flex items-center justify-center hidden">
-            
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 <?= $bg ?> <?= $text ?> rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-[20px]"><?= $s['icon'] ?></span>
           </div>
         </div>
         <p class="text-3xl font-black text-slate-900"><?= $s['value'] ?></p>

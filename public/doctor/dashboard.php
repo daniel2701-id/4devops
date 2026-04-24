@@ -78,6 +78,7 @@ try {
       $navItems = [
         ['icon'=>'home',          'label'=>'Beranda',    'href'=>'dashboard.php', 'active'=>true],
         ['icon'=>'calendar_month','label'=>'Jadwal Saya','href'=>'jadwal.php',    'active'=>false],
+        ['icon'=>'chat',          'label'=>'Chat Pasien','href'=>'chat.php',      'active'=>false],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../includes/functions.php';
+require_once __DIR__ . '/../../includes/mailer.php';
 require_role('patient');
 
 $user = current_user();
@@ -7,44 +8,169 @@ $pdo  = db();
 $error   = '';
 $success = '';
 
-// Handle Booking
+// ---- AJAX: get available time slots ----
+if (isset($_GET['slots']) && isset($_GET['doctor_id']) && isset($_GET['date'])) {
+    header('Content-Type: application/json');
+    $doctorId = (int) $_GET['doctor_id'];
+    $date     = $_GET['date'];
+
+    // Validate date
+    $ts = strtotime($date);
+    if (!$ts || $date < date('Y-m-d')) {
+        echo json_encode(['slots' => [], 'error' => 'Tanggal tidak valid.']);
+        exit;
+    }
+
+    $dayOfWeek = (int) date('w', $ts); // 0=Sun, 6=Sat
+
+    // Get doctor schedule for that day
+    $sched = $pdo->prepare(
+        "SELECT * FROM doctor_schedules WHERE doctor_id = ? AND day_of_week = ? AND is_active = 1 LIMIT 1"
+    );
+    $sched->execute([$doctorId, $dayOfWeek]);
+    $schedule = $sched->fetch();
+
+    if (!$schedule) {
+        echo json_encode(['slots' => [], 'error' => 'Dokter tidak tersedia pada hari ini.']);
+        exit;
+    }
+
+    // Generate slot times
+    $start    = strtotime($date . ' ' . $schedule['start_time']);
+    $end      = strtotime($date . ' ' . $schedule['end_time']);
+    $duration = (int) $schedule['slot_duration'];
+    $allSlots = [];
+    for ($t = $start; $t < $end; $t += $duration * 60) {
+        $allSlots[] = date('H:i', $t);
+    }
+
+    // Get booked slots
+    $booked = $pdo->prepare(
+        "SELECT TIME_FORMAT(scheduled_at,'%H:%i') as slot_time
+         FROM appointments 
+         WHERE doctor_id = ? AND DATE(scheduled_at) = ? AND status NOT IN ('cancelled')"
+    );
+    $booked->execute([$doctorId, $date]);
+    $bookedTimes = array_column($booked->fetchAll(), 'slot_time');
+
+    $result = [];
+    foreach ($allSlots as $slot) {
+        $result[] = [
+            'time'      => $slot,
+            'available' => !in_array($slot, $bookedTimes, true),
+        ];
+    }
+
+    echo json_encode(['slots' => $result]);
+    exit;
+}
+
+// ---- Handle Booking POST ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_abort();
-    $doctorId = (int) ($_POST['doctor_id'] ?? 0);
-    $date     = $_POST['scheduled_date'] ?? '';
-    $time     = $_POST['scheduled_time'] ?? '';
-    $reason   = sanitize_string($_POST['reason'] ?? '', 500);
+    $doctorId       = (int) ($_POST['doctor_id'] ?? 0);
+    $date           = $_POST['scheduled_date'] ?? '';
+    $time           = $_POST['scheduled_time'] ?? '';
+    $reason         = sanitize_string($_POST['reason'] ?? '', 500);
+    $familyMemberId = (int) ($_POST['family_member_id'] ?? 0);
 
     if (!$doctorId || empty($date) || empty($time)) {
         $error = 'Silakan pilih dokter, tanggal, dan waktu.';
     } else {
         $scheduledAt = date('Y-m-d H:i:s', strtotime("$date $time"));
-        
+
         if (strtotime($scheduledAt) < time()) {
             $error = 'Waktu reservasi tidak boleh di masa lalu.';
         } else {
-            try {
-                $stmt = $pdo->prepare(
-                    "INSERT INTO appointments (patient_id, doctor_id, scheduled_at, type, status, reason) 
-                     VALUES (?, ?, ?, 'Consultation', 'waiting', ?)"
+            // Validate family member ownership
+            if ($familyMemberId > 0) {
+                $fmCheck = $pdo->prepare("SELECT id FROM family_members WHERE id = ? AND user_id = ? AND is_active = 1");
+                $fmCheck->execute([$familyMemberId, $user['id']]);
+                if (!$fmCheck->fetch()) {
+                    $error = 'Anggota keluarga tidak ditemukan.';
+                }
+            }
+
+            if (!$error) {
+                // CONFLICT CHECK: prevent double-booking for same doctor + same slot
+                $conflict = $pdo->prepare(
+                    "SELECT id FROM appointments 
+                     WHERE doctor_id = ? AND scheduled_at = ? AND status NOT IN ('cancelled') LIMIT 1"
                 );
-                $stmt->execute([$user['id'], $doctorId, $scheduledAt, $reason]);
-                $success = 'Reservasi berhasil dibuat! Silakan cek menu Beranda untuk statusnya.';
-                audit_log('create_appointment', $user['id'], "Doc ID: $doctorId, Date: $scheduledAt");
-            } catch (Exception $e) {
-                $error = 'Terjadi kesalahan sistem. Silakan coba lagi.';
+                $conflict->execute([$doctorId, $scheduledAt]);
+
+                if ($conflict->fetch()) {
+                    $error = 'Slot waktu tersebut sudah dipesan oleh pasien lain. Silakan pilih waktu lain.';
+                } else {
+                    try {
+                        $pdo->beginTransaction();
+
+                        $stmt = $pdo->prepare(
+                            "INSERT INTO appointments (patient_id, family_member_id, doctor_id, scheduled_at, type, status, reason) 
+                             VALUES (?, ?, ?, ?, 'Consultation', 'waiting', ?)"
+                        );
+                        $stmt->execute([$user['id'], $familyMemberId ?: null, $doctorId, $scheduledAt, $reason]);
+                        $apptId = (int) $pdo->lastInsertId();
+
+                        // Fetch doctor name for notification
+                        $doc = $pdo->prepare("SELECT u.name FROM users u WHERE u.id = ? LIMIT 1");
+                        $doc->execute([$doctorId]);
+                        $docRow = $doc->fetch();
+
+                        // Build message with family member name if applicable
+                        $bookingFor = '';
+                        if ($familyMemberId) {
+                            $fm = $pdo->prepare("SELECT name FROM family_members WHERE id = ?");
+                            $fm->execute([$familyMemberId]);
+                            $fmRow = $fm->fetch();
+                            $bookingFor = ' (untuk ' . ($fmRow['name'] ?? 'anggota keluarga') . ')';
+                        }
+
+                        // Create in-app notification for patient
+                        $pdo->prepare(
+                            "INSERT INTO notifications (user_id, type, title, message, related_id) VALUES (?, 'info', ?, ?, ?)"
+                        )->execute([
+                            $user['id'],
+                            'Reservasi Berhasil Dibuat',
+                            'Reservasi Anda' . $bookingFor . ' dengan ' . ($docRow['name'] ?? 'dokter') . ' pada ' . date('d M Y, H:i', strtotime($scheduledAt)) . ' WIB telah dikonfirmasi.',
+                            $apptId
+                        ]);
+
+                        $pdo->commit();
+                        audit_log('create_appointment', $user['id'], "Doc ID: $doctorId, Date: $scheduledAt" . ($familyMemberId ? ", Family: $familyMemberId" : ''));
+                        $success = 'Reservasi berhasil dibuat!' . $bookingFor . ' Silakan cek menu Beranda untuk statusnya.';
+                    } catch (Exception $e) {
+                        $pdo->rollBack();
+                        $error = 'Terjadi kesalahan sistem. Silakan coba lagi.';
+                    }
+                }
             }
         }
     }
 }
 
-// Fetch Doctors
+// Fetch Doctors with avg rating
 $doctors = $pdo->query(
-    "SELECT u.id, u.name, dp.specialization 
+    "SELECT u.id, u.name, dp.specialization,
+            COALESCE(AVG(r.rating), 0) AS avg_rating,
+            COUNT(r.id) AS review_count
      FROM users u 
      JOIN doctor_profiles dp ON dp.user_id = u.id 
-     WHERE u.role = 'doctor' AND u.is_active = 1 AND dp.is_available = 1"
+     LEFT JOIN reviews r ON r.doctor_id = u.id
+     WHERE u.role = 'doctor' AND u.is_active = 1 AND dp.is_available = 1
+     GROUP BY u.id, u.name, dp.specialization"
 )->fetchAll();
+
+// Unique specializations for filter dropdown
+$specializations = array_unique(array_filter(array_column($doctors, 'specialization')));
+sort($specializations);
+
+// Fetch family members for "booking for" dropdown
+$familyMembers = $pdo->prepare(
+    "SELECT id, name, relationship FROM family_members WHERE user_id = ? AND is_active = 1 ORDER BY name"
+);
+$familyMembers->execute([$user['id']]);
+$familyList = $familyMembers->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -55,28 +181,34 @@ $doctors = $pdo->query(
 <?= tailwind_cdn() ?>
 <?= tailwind_config('#2563eb') ?>
 <?= google_fonts() ?>
-<style>body { font-family: 'Inter', sans-serif; }</style>
+<style>
+body { font-family: 'Inter', sans-serif; }
+.slot-btn { transition: all .15s ease; }
+.slot-btn.available { @apply cursor-pointer; }
+.slot-btn.booked { opacity: .45; cursor: not-allowed; }
+.slot-btn.selected { background: #2563eb !important; color: white !important; border-color: #2563eb !important; }
+#slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+</style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
 
-  <!-- Main Content -->
   <main class="flex-1 p-6 lg:p-8 overflow-auto">
     <div class="max-w-3xl mx-auto w-full">
-      
+
       <div class="mb-6">
         <a href="dashboard.php" class="inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-700 transition-colors bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md">
-            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-            Kembali ke Dashboard
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          Kembali ke Dashboard
         </a>
       </div>
-      
+
       <div class="mb-8 flex items-center gap-4">
         <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
-            <span class="material-symbols-outlined text-[24px]">calendar_add_on</span>
+          <span class="material-symbols-outlined text-[24px]">calendar_add_on</span>
         </div>
         <div>
-            <h1 class="text-2xl font-black text-slate-900">Buat Reservasi Baru</h1>
-            <p class="text-slate-500 font-medium mt-1">Pilih jadwal untuk berkonsultasi dengan dokter kami.</p>
+          <h1 class="text-2xl font-black text-slate-900">Buat Reservasi Baru</h1>
+          <p class="text-slate-500 font-medium mt-1">Pilih dokter dan slot waktu yang tersedia.</p>
         </div>
       </div>
 
@@ -84,45 +216,227 @@ $doctors = $pdo->query(
       <?= alert_html($success, 'success') ?>
 
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
-        <form method="POST" class="space-y-6">
-            <?= csrf_field() ?>
-            
-            <div class="flex flex-col gap-2">
-                <label class="text-sm font-bold text-slate-700">Pilih Dokter Spesialis</label>
-                <select name="doctor_id" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-                    <option value="">-- Pilih Dokter --</option>
-                    <?php foreach ($doctors as $doc): ?>
-                    <option value="<?= $doc['id'] ?>"><?= e($doc['name']) ?> (<?= e($doc['specialization']) ?>)</option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+        <form method="POST" id="reservasi-form" class="space-y-6">
+          <?= csrf_field() ?>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-bold text-slate-700">Tanggal Kunjungan</label>
-                    <input type="date" name="scheduled_date" required min="<?= date('Y-m-d') ?>" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+          <!-- Filter & Search Doctors -->
+          <div class="bg-slate-50 rounded-xl p-4 space-y-3">
+            <label class="text-sm font-bold text-slate-700 flex items-center gap-2">
+              <span class="material-symbols-outlined text-blue-500 text-[18px]">filter_alt</span>
+              Filter & Cari Dokter
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <select id="filter-spec" onchange="filterDoctors()"
+                      class="p-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+                <option value="">Semua Spesialisasi</option>
+                <?php foreach ($specializations as $spec): ?>
+                <option value="<?= e($spec) ?>"><?= e($spec) ?></option>
+                <?php endforeach; ?>
+              </select>
+              <div class="relative">
+                <span class="material-symbols-outlined text-[18px] text-slate-400 absolute left-3 top-1/2 -translate-y-1/2">search</span>
+                <input type="text" id="search-name" placeholder="Cari nama dokter..." oninput="filterDoctors()"
+                       class="w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+              </div>
+            </div>
+          </div>
+
+          <!-- Doctor Cards -->
+          <div>
+            <label class="text-sm font-bold text-slate-700 block mb-3">Pilih Dokter Spesialis</label>
+            <input type="hidden" name="doctor_id" id="doctor_id_input" required>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="doctor-cards">
+              <?php foreach ($doctors as $doc):
+                $stars    = round($doc['avg_rating']);
+                $ratingTxt = $doc['review_count'] > 0
+                  ? number_format($doc['avg_rating'], 1) . ' (' . $doc['review_count'] . ' ulasan)'
+                  : 'Belum ada ulasan';
+              ?>
+              <div class="doctor-card border-2 border-slate-200 rounded-xl p-4 cursor-pointer hover:border-blue-400 hover:bg-blue-50/40 transition-all select-none"
+                   data-doctor-id="<?= $doc['id'] ?>"
+                   data-spec="<?= e($doc['specialization'] ?? '') ?>"
+                   data-name="<?= e(strtolower($doc['name'])) ?>"
+                   onclick="selectDoctor(this, <?= $doc['id'] ?>)">
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    <?= e(initials($doc['name'])) ?>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-bold text-slate-900 text-sm truncate"><?= e($doc['name']) ?></p>
+                    <p class="text-xs text-slate-500"><?= e($doc['specialization'] ?? 'Umum') ?></p>
+                    <div class="flex items-center gap-1 mt-1.5">
+                      <?php for ($i = 1; $i <= 5; $i++): ?>
+                        <span class="text-[14px] <?= $i <= $stars ? 'text-amber-400' : 'text-slate-200' ?>">★</span>
+                      <?php endfor; ?>
+                      <span class="text-xs text-slate-400 ml-1"><?= $ratingTxt ?></span>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-bold text-slate-700">Waktu Estimasi</label>
-                    <input type="time" name="scheduled_time" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-                </div>
+              </div>
+              <?php endforeach; ?>
             </div>
+            <p id="no-doctors-msg" class="hidden text-center text-sm text-slate-400 mt-4 py-4">Tidak ada dokter yang sesuai filter.</p>
+          </div>
 
-            <div class="flex flex-col gap-2">
-                <label class="text-sm font-bold text-slate-700">Keluhan / Alasan Kunjungan</label>
-                <textarea name="reason" rows="3" placeholder="Tuliskan keluhan yang Anda rasakan..." required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"></textarea>
-            </div>
+          <!-- Date -->
+          <div>
+            <label class="text-sm font-bold text-slate-700 block mb-1.5">Tanggal Kunjungan</label>
+            <input type="date" name="scheduled_date" id="date-input" required min="<?= date('Y-m-d') ?>"
+                   onchange="loadSlots()"
+                   class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+          </div>
 
-            <div class="pt-4">
-                <button type="submit" class="w-full md:w-auto px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-md transition-colors flex items-center justify-center gap-2">
-                    Konfirmasi Reservasi
-                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
-                </button>
-            </div>
+          <!-- Time Slots -->
+          <div id="slot-section" class="hidden">
+            <label class="text-sm font-bold text-slate-700 block mb-2">
+              Pilih Slot Waktu
+              <span id="slot-loading" class="text-xs font-normal text-blue-500 ml-2 hidden">Memuat...</span>
+            </label>
+            <input type="hidden" name="scheduled_time" id="scheduled_time_input" required>
+            <div id="slot-grid" class="min-h-[48px]"></div>
+            <p id="slot-error" class="text-sm text-red-600 mt-2 hidden"></p>
+          </div>
+
+          <!-- Booking For (Self or Family) -->
+          <?php if (!empty($familyList)): ?>
+          <div>
+            <label class="text-sm font-bold text-slate-700 block mb-1.5 flex items-center gap-2">
+              <span class="material-symbols-outlined text-purple-500 text-[16px]">family_restroom</span>
+              Reservasi Untuk
+            </label>
+            <select name="family_member_id"
+                    class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+              <option value="0">Diri Sendiri</option>
+              <?php foreach ($familyList as $fm):
+                $relLabel = ['anak'=>'Anak','pasangan'=>'Pasangan','orang_tua'=>'Orang Tua','saudara'=>'Saudara','lainnya'=>'Lainnya'][$fm['relationship']] ?? $fm['relationship'];
+              ?>
+              <option value="<?= $fm['id'] ?>"><?= e($fm['name']) ?> (<?= e($relLabel) ?>)</option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <?php endif; ?>
+
+          <!-- Reason -->
+          <div>
+            <label class="text-sm font-bold text-slate-700 block mb-1.5">Keluhan / Alasan Kunjungan</label>
+            <textarea name="reason" rows="3" required placeholder="Tuliskan keluhan yang Anda rasakan..."
+                      class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"></textarea>
+          </div>
+
+          <div class="pt-4">
+            <button type="submit" class="w-full md:w-auto px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-md transition-colors flex items-center justify-center gap-2">
+              Konfirmasi Reservasi
+              <span class="material-symbols-outlined text-[20px]">check_circle</span>
+            </button>
+          </div>
         </form>
       </div>
 
     </div>
   </main>
+
+<script>
+let selectedDoctorId = null;
+
+function filterDoctors() {
+  const specFilter = document.getElementById('filter-spec').value.toLowerCase();
+  const nameSearch = document.getElementById('search-name').value.toLowerCase().trim();
+  const cards      = document.querySelectorAll('.doctor-card');
+  let visible = 0;
+
+  cards.forEach(card => {
+    const spec = (card.dataset.spec || '').toLowerCase();
+    const name = (card.dataset.name || '');
+    const matchSpec = !specFilter || spec === specFilter;
+    const matchName = !nameSearch || name.includes(nameSearch);
+
+    if (matchSpec && matchName) {
+      card.style.display = '';
+      visible++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+
+  document.getElementById('no-doctors-msg').classList.toggle('hidden', visible > 0);
+}
+
+function selectDoctor(el, doctorId) {
+  document.querySelectorAll('.doctor-card').forEach(c => {
+    c.classList.remove('border-blue-500', 'bg-blue-50');
+  });
+  el.classList.add('border-blue-500', 'bg-blue-50');
+  selectedDoctorId = doctorId;
+  document.getElementById('doctor_id_input').value = doctorId;
+  loadSlots();
+}
+
+function loadSlots() {
+  const dateInput = document.getElementById('date-input').value;
+  if (!selectedDoctorId || !dateInput) return;
+
+  const section  = document.getElementById('slot-section');
+  const grid     = document.getElementById('slot-grid');
+  const loading  = document.getElementById('slot-loading');
+  const slotErr  = document.getElementById('slot-error');
+  const timeInput = document.getElementById('scheduled_time_input');
+
+  section.classList.remove('hidden');
+  loading.classList.remove('hidden');
+  grid.innerHTML = '';
+  timeInput.value = '';
+  slotErr.classList.add('hidden');
+
+  fetch(`reservasi.php?slots=1&doctor_id=${selectedDoctorId}&date=${dateInput}`)
+    .then(r => r.json())
+    .then(data => {
+      loading.classList.add('hidden');
+      if (data.error) {
+        slotErr.textContent = data.error;
+        slotErr.classList.remove('hidden');
+        return;
+      }
+      if (!data.slots.length) {
+        slotErr.textContent = 'Tidak ada slot tersedia untuk tanggal ini.';
+        slotErr.classList.remove('hidden');
+        return;
+      }
+      data.slots.forEach(s => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = s.time;
+        btn.className = 'slot-btn text-sm font-bold py-2 rounded-lg border-2 ' +
+          (s.available
+            ? 'border-slate-200 bg-white text-slate-700 hover:border-blue-500 hover:bg-blue-50 available'
+            : 'border-slate-100 bg-slate-50 text-slate-400 booked');
+        if (s.available) {
+          btn.onclick = () => {
+            document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            timeInput.value = s.time;
+          };
+        }
+        grid.appendChild(btn);
+      });
+    })
+    .catch(() => {
+      loading.classList.add('hidden');
+      slotErr.textContent = 'Gagal memuat slot. Coba lagi.';
+      slotErr.classList.remove('hidden');
+    });
+}
+
+document.getElementById('reservasi-form').addEventListener('submit', function(e) {
+  if (!selectedDoctorId) {
+    e.preventDefault();
+    alert('Silakan pilih dokter terlebih dahulu.');
+    return;
+  }
+  if (!document.getElementById('scheduled_time_input').value) {
+    e.preventDefault();
+    alert('Silakan pilih slot waktu terlebih dahulu.');
+  }
+});
+</script>
 </body>
 </html>

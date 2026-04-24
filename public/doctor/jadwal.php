@@ -77,6 +77,7 @@ $success = flash('success');
       $navItems = [
         ['icon'=>'home',          'label'=>'Beranda',    'href'=>'dashboard.php', 'active'=>false],
         ['icon'=>'calendar_month','label'=>'Jadwal Saya','href'=>'jadwal.php',    'active'=>true],
+        ['icon'=>'chat',          'label'=>'Chat Pasien','href'=>'chat.php',      'active'=>false],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']

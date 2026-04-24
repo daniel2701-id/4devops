@@ -46,9 +46,13 @@ $user = current_user();
     <nav class="flex-1 p-4 space-y-1">
       <?php
       $navItems = [
-        ['icon'=>'home',    'label'=>'Beranda',  'href'=>'dashboard.php', 'active'=>false],
-        ['icon'=>'history', 'label'=>'Riwayat',  'href'=>'riwayat.php',   'active'=>false],
-        ['icon'=>'person',  'label'=>'Profil',   'href'=>'profil.php',    'active'=>true],
+        ['icon'=>'home',           'label'=>'Beranda',   'href'=>'dashboard.php', 'active'=>false],
+        ['icon'=>'history',        'label'=>'Riwayat',   'href'=>'riwayat.php',   'active'=>false],
+        ['icon'=>'star',           'label'=>'Ulasan',    'href'=>'ulasan.php',    'active'=>false],
+        ['icon'=>'notifications',  'label'=>'Notifikasi','href'=>'notifikasi.php','active'=>false],
+        ['icon'=>'family_restroom','label'=>'Keluarga',  'href'=>'keluarga.php',  'active'=>false],
+        ['icon'=>'chat',           'label'=>'Chat',      'href'=>'chat.php',      'active'=>false],
+        ['icon'=>'person',         'label'=>'Profil',    'href'=>'profil.php',    'active'=>true],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']

@@ -65,7 +65,7 @@ tailwind.config = {
     extend: {
       fontFamily: { sans: ['Inter', 'sans-serif'] },
       colors: {
-        primary:         '$primaryColor',
+        primary:         '{$primaryColor}',
         'primary-light': '#6750a4',
         'primary-fixed': '#e9ddff',
         surface:         '#fdf7ff',
