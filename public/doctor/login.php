@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
 
-    <div class="relative z-10 text-purple-300 text-xs font-medium">© 2024 CareConnect Solusi Terpadu</div>
+    <div class="relative z-10 text-purple-300 text-xs font-medium">© 2026 CareConnect Solusi Terpadu</div>
   </div>
 
   <!-- Right Panel: Form -->
@@ -98,8 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">mail</span>
             <input type="email" id="email" name="email" placeholder="dr.nama@klinik.com" required autocomplete="off"
-              class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-purple-200 outline-none placeholder-slate-400 shadow-sm transition-all"
-              value="<?= e($_POST['email'] ?? '') ?>">
+              class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-purple-200 outline-none placeholder-slate-400 shadow-sm transition-all">
           </div>
         </div>
 

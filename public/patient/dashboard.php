@@ -121,7 +121,6 @@ try {
       $stats = [
         ['label'=>'Janji Mendatang',  'value'=>count($upcoming),    'icon'=>'event',       'color'=>'blue'],
         ['label'=>'Riwayat Kunjungan','value'=>$pastCount,          'icon'=>'history_edu', 'color'=>'purple'],
-        ['label'=>'Ulasan Tertunda',  'value'=>$pendingReviewCount, 'icon'=>'star',        'color'=>'amber'],
       ];
       foreach ($stats as $s):
         $bg   = "bg-{$s['color']}-50";

@@ -125,7 +125,22 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
   </div>
 </div>
 
-<script>window.addEventListener('load', () => { window.print(); });</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+window.addEventListener('load', () => {
+    const element = document.body;
+    const opt = {
+      margin:       0.5,
+      filename:     'Resep_{$apptData['patient_name']}.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save().then(() => {
+       setTimeout(() => { window.close(); }, 500);
+    });
+});
+</script>
 </body>
 </html>
 HTML;
@@ -246,7 +261,7 @@ $age = $appt['birth_date'] ? date_diff(date_create($appt['birth_date']), date_cr
         ['icon'=>'home',             'label'=>'Beranda',    'href'=>'dashboard.php',   'active'=>false],
         ['icon'=>'calendar_month',   'label'=>'Jadwal',     'href'=>'jadwal.php',      'active'=>false],
         ['icon'=>'chat',             'label'=>'Chat',       'href'=>'chat.php',        'active'=>false],
-        ['icon'=>'medical_services', 'label'=>'Konsultasi', 'href'=>'rekam_medis.php', 'active'=>true],
+        ['icon'=>'medical_services', 'label'=>'Rekam Medis', 'href'=>'rekam_medis.php', 'active'=>true],
       ];
       foreach ($navItems as $item):
         $cls = $item['active'] ? 'bg-primary-fixed text-primary font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-medium'; ?>

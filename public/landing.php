@@ -185,18 +185,14 @@ $timeout = !empty($_GET['timeout']) ? 'Sesi Anda telah berakhir. Silakan masuk k
           </div>
           CareConnect
         </div>
-        <p class="text-xs text-slate-400">© 2024 CareConnect. Solusi Manajemen Klinik Terpadu.</p>
+        <p class="text-xs text-slate-400">© 2026 CareConnect. Solusi Manajemen Klinik Terpadu.</p>
       </div>
       <div class="flex flex-col space-y-3 text-xs text-slate-400 uppercase tracking-widest">
         <a href="#" class="hover:text-blue-300 transition-colors">Fitur</a>
         <a href="#" class="hover:text-blue-300 transition-colors">Tentang Kami</a>
       </div>
       <div class="flex flex-col space-y-3 text-xs text-slate-400 uppercase tracking-widest">
-        <a href="#" class="hover:text-blue-300 transition-colors">Kontak</a>
-        <a href="#" class="hover:text-blue-300 transition-colors">Privasi</a>
-      </div>
-      <div class="flex flex-col space-y-3 text-xs text-slate-400 uppercase tracking-widest">
-        <a href="#" class="hover:text-blue-300 transition-colors">Syarat</a>
+        <a href="https://wa.me/628124790007" class="hover:text-blue-300 transition-colors">Kontak (08124790007)</a>
       </div>
     </div>
   </footer>

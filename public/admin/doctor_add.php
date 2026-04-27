@@ -178,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Spesialisasi</label>
             <input type="text" name="specialization" list="spec-list" placeholder="Pilih atau ketik spesialisasi..." required
-              value="<?= e($_POST['specialization'] ?? 'Umum') ?>"
+              value="<?= e($_POST['specialization'] ?? '') ?>"
               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
             <datalist id="spec-list">
               <option value="Umum">

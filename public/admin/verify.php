@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </p>
     </div>
 
-    <div class="relative z-10 text-slate-500 text-xs font-medium">© 2024 MediCare Pro Systems. All rights reserved.</div>
+    <div class="relative z-10 text-slate-500 text-xs font-medium">© 2026 CareConnect Systems. All rights reserved.</div>
   </div>
 
   <!-- Right Panel -->

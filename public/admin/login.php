@@ -106,11 +106,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <p class="text-slate-400 text-sm font-medium mb-8">Streamline your clinic's operations, manage staff securely, and maintain compliance.</p>
     </div>
 
-    <div class="relative z-10 text-slate-500 text-xs font-medium">© 2024 MediCare Pro Systems. All rights reserved.</div>
+    <div class="relative z-10 text-slate-500 text-xs font-medium">© 2026 CareConnect Systems. All rights reserved.</div>
   </div>
 
   <!-- Right Panel -->
-  <div class="w-full md:w-1/2 flex flex-col items-center justify-center p-6 lg:p-12 bg-slate-950">
+  <div class="w-full md:w-1/2 flex flex-col items-center pt-16 justify-start p-6 lg:p-12 bg-slate-950">
     <div class="w-full max-w-[420px]">
 
       <a href="<?= APP_URL ?>/landing.php" class="flex items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors mb-8 text-sm font-medium group">

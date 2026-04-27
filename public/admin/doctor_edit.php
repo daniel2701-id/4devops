@@ -221,7 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Spesialisasi</label>
-            <input type="text" name="specialization" list="spec-list" value="<?= e($doc['specialization'] ?? 'Umum') ?>"
+            <input type="text" name="specialization" list="spec-list" value="<?= e($doc['specialization'] ?? '') ?>"
               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all">
             <datalist id="spec-list">
               <option value="Umum">

@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
 
-    <div class="relative z-10 text-blue-300 text-xs font-medium">© 2024 CareConnect Solusi Terpadu</div>
+    <div class="relative z-10 text-blue-300 text-xs font-medium">© 2026 CareConnect Solusi Terpadu</div>
   </div>
 
   <!-- Right Panel: Form -->

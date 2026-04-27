@@ -72,6 +72,20 @@ if (isset($_GET['slots']) && isset($_GET['doctor_id']) && isset($_GET['date'])) 
     exit;
 }
 
+// Check if user has profile
+$hasProfile = false;
+$myProfile = [];
+try {
+    $stmtProf = $pdo->prepare("SELECT gender, age, blood_type FROM patient_profiles WHERE user_id = ?");
+    $stmtProf->execute([$user['id']]);
+    if ($row = $stmtProf->fetch()) {
+        $myProfile = $row;
+        if (!empty($myProfile['gender']) && !empty($myProfile['age'])) {
+            $hasProfile = true;
+        }
+    }
+} catch (Exception $e) {}
+
 // ---- Handle Booking POST ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_abort();
@@ -79,9 +93,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date        = $_POST['scheduled_date'] ?? '';
     $time        = $_POST['scheduled_time'] ?? '';
     $reason      = sanitize_string($_POST['reason'] ?? '', 500);
+    
     $gender      = $_POST['gender'] ?? '';
     $age         = (int) ($_POST['age'] ?? 0);
     $blood_type  = $_POST['blood_type'] ?? '';
+
+    if ($hasProfile) {
+        $gender = $myProfile['gender'];
+        $age = $myProfile['age'];
+        $blood_type = $myProfile['blood_type'];
+    }
 
     if (!$doctorId || empty($date) || empty($time) || empty($gender) || !$age || empty($blood_type)) {
         $error = 'Silakan pilih dokter, jadwal, dan lengkapi data profil.';
@@ -269,6 +290,7 @@ body { font-family: 'Inter', sans-serif; }
 
 
 
+          <?php if (!$hasProfile): ?>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label class="text-sm font-bold text-slate-700 block mb-1.5">Jenis Kelamin</label>
@@ -294,6 +316,7 @@ body { font-family: 'Inter', sans-serif; }
               </select>
             </div>
           </div>
+          <?php endif; ?>
 
           <!-- Reason -->
           <div>
