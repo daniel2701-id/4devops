@@ -82,30 +82,30 @@ $timeout = !empty($_GET['timeout']) ? 'Sesi Anda telah berakhir. Silakan masuk k
 
         <!-- Patient Card -->
         <div
-          class="bg-white rounded-2xl border border-outline-variant p-8 shadow-sm flex flex-col hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+          class="bg-blue-50 text-slate-900 rounded-2xl border-2 border-blue-500 p-8 shadow-md relative flex flex-col">
+          <div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center mb-6 mt-2">
             <span class="material-symbols-outlined">person</span>
           </div>
-          <h3 class="text-xl font-bold text-on-surface mb-2">Pasien</h3>
-          <p class="text-sm font-medium text-on-surface-variant mb-6 flex-grow">
+          <h3 class="text-xl font-bold mb-2">Pasien</h3>
+          <p class="text-sm font-medium opacity-80 mb-6 flex-grow">
             Akses layanan kesehatan dengan mudah dari genggaman.
           </p>
-          <ul class="space-y-2 mb-8 text-sm font-medium text-on-surface">
+          <ul class="space-y-2 mb-8 text-sm font-medium">
             <li class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-blue-500 text-[18px]">check_circle</span>
+              <span class="material-symbols-outlined text-blue-600 text-[18px]">check_circle</span>
               Booking Online
             </li>
             <li class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-blue-500 text-[18px]">check_circle</span>
+              <span class="material-symbols-outlined text-blue-600 text-[18px]">check_circle</span>
               Riwayat Medis Digital
             </li>
             <li class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-blue-500 text-[18px]">check_circle</span>
+              <span class="material-symbols-outlined text-blue-600 text-[18px]">check_circle</span>
               Resep Digital
             </li>
           </ul>
           <a href="<?= APP_URL ?>/patient/login.php"
-            class="w-full py-2.5 border border-blue-200 text-blue-600 rounded-xl text-sm font-bold text-center hover:bg-blue-50 transition-colors mt-auto block">
+            class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold text-center hover:bg-blue-700 transition-colors mt-auto block shadow-md">
             Masuk sebagai Pasien
           </a>
         </div>
@@ -142,30 +142,30 @@ $timeout = !empty($_GET['timeout']) ? 'Sesi Anda telah berakhir. Silakan masuk k
 
         <!-- Admin Card -->
         <div
-          class="bg-white rounded-2xl border border-outline-variant p-8 shadow-sm flex flex-col hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center mb-6">
+          class="bg-teal-50 text-slate-900 rounded-2xl border-2 border-teal-500 p-8 shadow-md relative flex flex-col">
+          <div class="w-12 h-12 bg-teal-600 text-white rounded-xl flex items-center justify-center mb-6 mt-2">
             <span class="material-symbols-outlined">admin_panel_settings</span>
           </div>
-          <h3 class="text-xl font-bold text-on-surface mb-2">Admin</h3>
-          <p class="text-sm font-medium text-on-surface-variant mb-6 flex-grow">
+          <h3 class="text-xl font-bold mb-2">Admin</h3>
+          <p class="text-sm font-medium opacity-80 mb-6 flex-grow">
             Kontrol penuh atas operasional dan laporan klinik.
           </p>
-          <ul class="space-y-2 mb-8 text-sm font-medium text-on-surface">
+          <ul class="space-y-2 mb-8 text-sm font-medium">
             <li class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-teal-500 text-[18px]">check_circle</span>
+              <span class="material-symbols-outlined text-teal-600 text-[18px]">check_circle</span>
               Manajemen Inventaris
             </li>
             <li class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-teal-500 text-[18px]">check_circle</span>
+              <span class="material-symbols-outlined text-teal-600 text-[18px]">check_circle</span>
               Laporan Keuangan
             </li>
             <li class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-teal-500 text-[18px]">check_circle</span>
+              <span class="material-symbols-outlined text-teal-600 text-[18px]">check_circle</span>
               Manajemen Pengguna
             </li>
           </ul>
           <a href="<?= APP_URL ?>/admin/login.php"
-            class="w-full py-2.5 border border-teal-200 text-teal-600 rounded-xl text-sm font-bold text-center hover:bg-teal-50 transition-colors mt-auto block">
+            class="w-full py-2.5 bg-teal-600 text-white rounded-xl text-sm font-bold text-center hover:bg-teal-700 transition-colors mt-auto block shadow-md">
             Masuk sebagai Admin
           </a>
         </div>
