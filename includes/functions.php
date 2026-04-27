@@ -59,8 +59,10 @@ function tailwind_config(string $primaryColor = '#4f378a'): string
 {
     return <<<JS
 <style>
-  body { animation: globalFadeIn 0.3s ease-in-out; }
-  @keyframes globalFadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  body::-webkit-scrollbar { display: none; }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  body { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 <script>
 tailwind.config = {

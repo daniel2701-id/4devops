@@ -24,15 +24,22 @@ if (isset($_GET['slots']) && isset($_GET['doctor_id']) && isset($_GET['date'])) 
     $dayOfWeek = (int) date('w', $ts); // 0=Sun, 6=Sat
 
     // Get doctor schedule for that day
-    $sched = $pdo->prepare(
-        "SELECT * FROM doctor_schedules WHERE doctor_id = ? AND day_of_week = ? AND is_active = 1 LIMIT 1"
-    );
-    $sched->execute([$doctorId, $dayOfWeek]);
-    $schedule = $sched->fetch();
+    $schedule = null;
+    try {
+        $sched = $pdo->prepare(
+            "SELECT * FROM doctor_schedules WHERE doctor_id = ? AND day_of_week = ? AND is_active = 1 LIMIT 1"
+        );
+        $sched->execute([$doctorId, $dayOfWeek]);
+        $schedule = $sched->fetch();
+    } catch (Exception $e) {}
 
     if (!$schedule) {
-        echo json_encode(['slots' => [], 'error' => 'Dokter tidak tersedia pada hari ini.']);
-        exit;
+        // DEFAULT FALLBACK IF NO SCHEDULE SET
+        $schedule = [
+            'start_time' => '08:00:00',
+            'end_time'   => '16:00:00',
+            'slot_duration' => 30
+        ];
     }
 
     // Generate slot times

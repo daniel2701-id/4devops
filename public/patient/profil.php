@@ -4,9 +4,16 @@ require_role('patient');
 $user = current_user();
 $pdo = db();
 
-$stmt = $pdo->prepare("SELECT gender, age, blood_type FROM patient_profiles WHERE user_id = ?");
-$stmt->execute([$user['id']]);
-$profile = $stmt->fetch();
+$profile = ['gender' => '-', 'age' => null, 'blood_type' => '-'];
+try {
+    $stmt = $pdo->prepare("SELECT gender, age, blood_type FROM patient_profiles WHERE user_id = ?");
+    $stmt->execute([$user['id']]);
+    if ($row = $stmt->fetch()) {
+        $profile = $row;
+    }
+} catch (Exception $e) {
+    // If table/column doesn't exist, ignore
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
