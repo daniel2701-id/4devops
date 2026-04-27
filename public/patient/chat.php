@@ -10,6 +10,21 @@ $selectedAppt  = 0;
 $selAppt       = null;
 $dbError       = '';
 
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS messages (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        appointment_id BIGINT UNSIGNED NOT NULL,
+        sender_id BIGINT UNSIGNED NOT NULL,
+        body TEXT NOT NULL,
+        read_at DATETIME NULL DEFAULT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
+        FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_appt_msg (appointment_id),
+        INDEX idx_sender_msg (sender_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+} catch (Exception $e) {}
+
 // ---- AJAX: Send message ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_send'])) {
   header('Content-Type: application/json');

@@ -113,17 +113,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch Doctors with avg rating
-$doctors = $pdo->query(
-    "SELECT u.id, u.name, dp.specialization,
-            COALESCE(AVG(r.rating), 0) AS avg_rating,
-            COUNT(r.id) AS review_count
-     FROM users u 
-     JOIN doctor_profiles dp ON dp.user_id = u.id 
-     LEFT JOIN reviews r ON r.doctor_id = u.id
-     WHERE u.role = 'doctor' AND u.is_active = 1 AND dp.is_available = 1
-     GROUP BY u.id, u.name, dp.specialization"
-)->fetchAll();
+// Fetch Doctors (tanpa rating - fitur ulasan dihapus)
+$doctors = [];
+try {
+    $doctors = $pdo->query(
+        "SELECT u.id, u.name, dp.specialization
+         FROM users u 
+         JOIN doctor_profiles dp ON dp.user_id = u.id 
+         WHERE u.role = 'doctor' AND u.is_active = 1 AND dp.is_available = 1
+         ORDER BY u.name ASC"
+    )->fetchAll();
+} catch (Exception $e) {
+    // Graceful degradation
+}
 
 // Unique specializations for filter dropdown
 $specializations = array_unique(array_filter(array_column($doctors, 'specialization')));

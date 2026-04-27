@@ -7,7 +7,6 @@ $pdo  = db();
 
 $upcoming = [];
 $pastCount = 0;
-$pendingReviewCount = 0;
 
 try {
     // Upcoming appointments
@@ -26,14 +25,6 @@ try {
     $stmt2 = $pdo->prepare('SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND status = ?');
     $stmt2->execute([$user['id'], 'finished']);
     $pastCount = (int) $stmt2->fetchColumn();
-
-    // Pending reviews (finished appointments without review)
-    $revStmt = $pdo->prepare(
-        "SELECT COUNT(*) FROM appointments a LEFT JOIN reviews r ON r.appointment_id = a.id
-         WHERE a.patient_id = ? AND a.status = 'finished' AND r.id IS NULL"
-    );
-    $revStmt->execute([$user['id']]);
-    $pendingReviewCount = (int) $revStmt->fetchColumn();
 
 } catch (Exception $e) {
     // Graceful degradation
@@ -86,7 +77,6 @@ try {
       $navItems = [
         ['icon'=>'home',    'label'=>'Beranda', 'href'=>'dashboard.php', 'active'=>true,  'badge'=>0],
         ['icon'=>'history', 'label'=>'Riwayat', 'href'=>'riwayat.php',   'active'=>false, 'badge'=>0],
-        ['icon'=>'star',    'label'=>'Ulasan',  'href'=>'ulasan.php',    'active'=>false, 'badge'=>$pendingReviewCount],
         ['icon'=>'chat',    'label'=>'Chat',    'href'=>'chat.php',      'active'=>false, 'badge'=>0],
         ['icon'=>'person',  'label'=>'Profil',  'href'=>'profil.php',    'active'=>false, 'badge'=>0],
       ];
