@@ -90,14 +90,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <?= alert_html($error, 'error') ?>
 
-      <form method="POST" class="flex flex-col gap-4">
+      <form method="POST" class="flex flex-col gap-4" autocomplete="off">
         <?= csrf_field() ?>
+
+        <!-- Anti-autofill trap -->
+        <input style="display:none" type="email" name="fake_email" autocomplete="username">
+        <input style="display:none" type="password" name="fake_password" autocomplete="current-password">
 
         <div class="flex flex-col gap-1">
           <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="email">Email Profesional</label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">mail</span>
-            <input type="email" id="email" name="email" placeholder="dr.nama@klinik.com" required autocomplete="off"
+            <input type="email" id="email" name="email" placeholder="dr.nama@klinik.com" required autocomplete="new-password"
               class="w-full h-[52px] pl-12 pr-4 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-purple-200 outline-none placeholder-slate-400 shadow-sm transition-all">
           </div>
         </div>
@@ -106,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1" for="password">Kata Sandi</label>
           <div class="relative flex items-center">
             <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">lock</span>
-            <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="off"
+            <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="new-password"
               class="w-full h-[52px] pl-12 pr-12 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-purple-200 outline-none placeholder-slate-400 shadow-sm transition-all">
             <button type="button" onclick="togglePassword('password', this)" class="absolute right-4 text-slate-400 hover:text-primary transition-colors">
               <span class="material-symbols-outlined text-[20px]">visibility_off</span>

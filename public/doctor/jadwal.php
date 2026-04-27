@@ -11,10 +11,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['appt_id'], $_POST['st
     $apptId = (int) $_POST['appt_id'];
     $status = in_array($_POST['status'], ['waiting', 'in_session', 'finished', 'cancelled']) ? $_POST['status'] : 'waiting';
     
-    // Only allow changing if the appointment belongs to this doctor
-    $stmt = $pdo->prepare("UPDATE appointments SET status = ? WHERE id = ? AND doctor_id = ?");
+    // Only allow changing if the appointment belongs to this doctor and is not finalized
+    $stmt = $pdo->prepare("UPDATE appointments SET status = ? WHERE id = ? AND doctor_id = ? AND status NOT IN ('finished', 'cancelled')");
     $stmt->execute([$status, $apptId, $user['id']]);
-    flash('success', 'Status jadwal berhasil diperbarui.');
+    
+    if ($stmt->rowCount() > 0) {
+        flash('success', 'Status jadwal berhasil diperbarui.');
+    } else {
+        flash('error', 'Status jadwal ini sudah terkunci dan tidak bisa diubah lagi.');
+    }
     header('Location: jadwal.php');
     exit;
 }
@@ -78,7 +83,6 @@ $success = flash('success');
         ['icon'=>'home',             'label'=>'Beranda',    'href'=>'dashboard.php',   'active'=>false],
         ['icon'=>'calendar_month',   'label'=>'Jadwal',     'href'=>'jadwal.php',      'active'=>true],
         ['icon'=>'chat',             'label'=>'Chat',       'href'=>'chat.php',        'active'=>false],
-        ['icon'=>'medical_services', 'label'=>'Rekam Medis', 'href'=>'rekam_medis.php', 'active'=>false],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']
@@ -165,6 +169,9 @@ $success = flash('success');
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right">
+                            <?php if (in_array($appt['status'], ['finished', 'cancelled'])): ?>
+                                <span class="text-xs font-bold text-slate-400 px-2 py-1.5 inline-block">Status Terkunci</span>
+                            <?php else: ?>
                             <form method="POST" class="inline-flex items-center gap-2">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="appt_id" value="<?= $appt['id'] ?>">
@@ -175,6 +182,7 @@ $success = flash('success');
                                     <option value="cancelled" <?= $appt['status']==='cancelled' ? 'selected':'' ?>>Batalkan</option>
                                 </select>
                             </form>
+                            <?php endif; ?>
                             <?php if ($appt['status'] === 'in_session' || $appt['status'] === 'finished'): ?>
                                 <a href="rekam_medis.php?appt_id=<?= $appt['id'] ?>" class="ml-2 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors" title="Isi Rekam Medis">
                                     <span class="material-symbols-outlined text-[18px]">medical_information</span>

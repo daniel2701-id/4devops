@@ -261,7 +261,6 @@ $age = $appt['birth_date'] ? date_diff(date_create($appt['birth_date']), date_cr
         ['icon'=>'home',             'label'=>'Beranda',    'href'=>'dashboard.php',   'active'=>false],
         ['icon'=>'calendar_month',   'label'=>'Jadwal',     'href'=>'jadwal.php',      'active'=>false],
         ['icon'=>'chat',             'label'=>'Chat',       'href'=>'chat.php',        'active'=>false],
-        ['icon'=>'medical_services', 'label'=>'Rekam Medis', 'href'=>'rekam_medis.php', 'active'=>true],
       ];
       foreach ($navItems as $item):
         $cls = $item['active'] ? 'bg-primary-fixed text-primary font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-medium'; ?>
