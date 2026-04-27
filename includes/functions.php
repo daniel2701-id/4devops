@@ -55,10 +55,13 @@ function google_fonts(): string
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">';
 }
 
-/** Tailwind config script */
 function tailwind_config(string $primaryColor = '#4f378a'): string
 {
     return <<<JS
+<style>
+  body { animation: globalFadeIn 0.3s ease-in-out; }
+  @keyframes globalFadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+</style>
 <script>
 tailwind.config = {
   theme: {

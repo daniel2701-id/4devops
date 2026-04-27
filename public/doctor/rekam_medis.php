@@ -151,46 +151,6 @@ $stmt2 = $pdo->prepare("SELECT * FROM medical_records WHERE appointment_id = ? L
 $stmt2->execute([$apptId]);
 $record = $stmt2->fetch() ?: [];
 
-// ---- Handle File Attachment Upload ----
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['attachment'])) {
-    csrf_abort();
-    $file = $_FILES['attachment'];
-
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        $error = 'Gagal mengunggah file. Silakan coba lagi.';
-    } elseif ($file['size'] > 10 * 1024 * 1024) {
-        $error = 'Ukuran file maksimal 10 MB.';
-    } else {
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $allowed = ['pdf', 'jpg', 'jpeg', 'png'];
-        if (!in_array($ext, $allowed)) {
-            $error = 'Tipe file tidak diizinkan. Hanya PDF, JPG, PNG.';
-        } elseif (empty($record)) {
-            $error = 'Simpan rekam medis terlebih dahulu sebelum menambahkan lampiran.';
-        } else {
-            $uploadDir = BASE_PATH . '/storage/attachments/';
-            if (!is_dir($uploadDir)) { mkdir($uploadDir, 0755, true); }
-
-            $safeName  = preg_replace('/[^a-zA-Z0-9_.-]/', '_', $file['name']);
-            $fileName  = time() . '_' . $safeName;
-            $fullPath  = $uploadDir . $fileName;
-            $fileType  = in_array($ext, ['pdf']) ? 'pdf' : 'image';
-            $desc      = sanitize_string($_POST['description'] ?? '', 200);
-
-            if (move_uploaded_file($file['tmp_name'], $fullPath)) {
-                $pdo->prepare(
-                    "INSERT INTO medical_attachments (record_id, uploader_id, file_name, file_path, file_type, file_size, description) VALUES (?, ?, ?, ?, ?, ?, ?)"
-                )->execute([$record['id'], $user['id'], $safeName, 'storage/attachments/' . $fileName, $fileType, $file['size'], $desc]);
-
-                flash('success', 'Lampiran berhasil diunggah.');
-                header("Location: rekam_medis.php?appt_id=$apptId");
-                exit;
-            } else {
-                $error = 'Gagal menyimpan file. Periksa izin direktori.';
-            }
-        }
-    }
-}
 
 // Handle main form
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_FILES['attachment'])) {
@@ -244,13 +204,6 @@ $success = flash('success') ?? $success;
 $stmt2->execute([$apptId]);
 $record = $stmt2->fetch() ?: [];
 
-// Fetch attachments
-$attachments = [];
-if (!empty($record)) {
-    $att = $pdo->prepare("SELECT * FROM medical_attachments WHERE record_id = ? ORDER BY created_at DESC");
-    $att->execute([$record['id']]);
-    $attachments = $att->fetchAll();
-}
 
 $age = $appt['birth_date'] ? date_diff(date_create($appt['birth_date']), date_create('now'))->y : '-';
 ?>
@@ -290,9 +243,10 @@ $age = $appt['birth_date'] ? date_diff(date_create($appt['birth_date']), date_cr
     </div>
     <nav class="flex-1 p-4 space-y-1">
       <?php $navItems = [
-        ['icon'=>'home','label'=>'Beranda','href'=>'dashboard.php','active'=>false],
-        ['icon'=>'calendar_month','label'=>'Jadwal Saya','href'=>'jadwal.php','active'=>false],
-        ['icon'=>'chat_bubble','label'=>'Konsultasi','href'=>'#','active'=>true],
+        ['icon'=>'home',             'label'=>'Beranda',    'href'=>'dashboard.php',   'active'=>false],
+        ['icon'=>'calendar_month',   'label'=>'Jadwal',     'href'=>'jadwal.php',      'active'=>false],
+        ['icon'=>'chat',             'label'=>'Chat',       'href'=>'chat.php',        'active'=>false],
+        ['icon'=>'medical_services', 'label'=>'Konsultasi', 'href'=>'rekam_medis.php', 'active'=>true],
       ];
       foreach ($navItems as $item):
         $cls = $item['active'] ? 'bg-primary-fixed text-primary font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-medium'; ?>
@@ -368,49 +322,7 @@ $age = $appt['birth_date'] ? date_diff(date_create($appt['birth_date']), date_cr
           </div>
         </div>
 
-        <!-- Lampiran (Attachments) -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
-              <span class="material-symbols-outlined text-[18px] text-slate-500">attach_file</span>
-              Lampiran (<?= count($attachments) ?>)
-            </h3>
-          </div>
-          <?php if (!empty($attachments)): ?>
-          <div class="divide-y divide-slate-100">
-            <?php foreach ($attachments as $att): ?>
-            <div class="flex items-center gap-3 px-4 py-3">
-              <span class="material-symbols-outlined text-[20px] <?= $att['file_type'] === 'pdf' ? 'text-red-500' : 'text-blue-500' ?>">
-                <?= $att['file_type'] === 'pdf' ? 'picture_as_pdf' : 'image' ?>
-              </span>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold text-slate-800 truncate"><?= e($att['file_name']) ?></p>
-                <p class="text-xs text-slate-400"><?= round($att['file_size'] / 1024) ?> KB</p>
-              </div>
-              <a href="<?= APP_URL . '/' . $att['file_path'] ?>" target="_blank"
-                 class="text-xs font-bold text-primary hover:underline">Buka</a>
-            </div>
-            <?php endforeach; ?>
-          </div>
-          <?php endif; ?>
 
-          <!-- Upload form -->
-          <form method="POST" enctype="multipart/form-data" class="p-4 border-t border-slate-100 space-y-3">
-            <?= csrf_field() ?>
-            <div>
-              <label class="text-xs font-bold text-slate-600 block mb-1">Upload Lampiran (PDF/Gambar, maks 10 MB)</label>
-              <input type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png" required
-                     class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-primary-fixed file:text-primary hover:file:bg-primary hover:file:text-white file:transition-colors">
-            </div>
-            <div>
-              <input type="text" name="description" placeholder="Keterangan (opsional)"
-                     class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-primary">
-            </div>
-            <button type="submit" class="w-full text-xs font-bold bg-slate-800 text-white py-2 rounded-lg hover:bg-slate-900 transition-colors flex items-center justify-center gap-1">
-              <span class="material-symbols-outlined text-[16px]">upload</span> Upload
-            </button>
-          </form>
-        </div>
       </div>
 
       <!-- Form Rekam Medis -->

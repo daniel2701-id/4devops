@@ -72,9 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date        = $_POST['scheduled_date'] ?? '';
     $time        = $_POST['scheduled_time'] ?? '';
     $reason      = sanitize_string($_POST['reason'] ?? '', 500);
+    $gender      = $_POST['gender'] ?? '';
+    $age         = (int) ($_POST['age'] ?? 0);
+    $blood_type  = $_POST['blood_type'] ?? '';
 
-    if (!$doctorId || empty($date) || empty($time)) {
-        $error = 'Silakan pilih dokter, tanggal, dan waktu.';
+    if (!$doctorId || empty($date) || empty($time) || empty($gender) || !$age || empty($blood_type)) {
+        $error = 'Silakan pilih dokter, jadwal, dan lengkapi data profil.';
     } else {
         $scheduledAt = date('Y-m-d H:i:s', strtotime("$date $time"));
 
@@ -100,6 +103,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
                     $stmt->execute([$user['id'], $doctorId, $scheduledAt, $reason]);
                     $apptId = (int) $pdo->lastInsertId();
+
+                    try {
+                        $pdo->exec("ALTER TABLE patient_profiles ADD COLUMN age INT NULL AFTER birth_date");
+                    } catch (Exception $e) {}
+
+                    $pdo->prepare(
+                        "INSERT INTO patient_profiles (user_id, gender, age, blood_type) 
+                         VALUES (?, ?, ?, ?) 
+                         ON DUPLICATE KEY UPDATE gender=VALUES(gender), age=VALUES(age), blood_type=VALUES(blood_type)"
+                    )->execute([$user['id'], $gender, $age, $blood_type]);
 
                     $pdo->commit();
                     audit_log('create_appointment', $user['id'], "Doc ID: $doctorId, Date: $scheduledAt");
@@ -207,12 +220,7 @@ body { font-family: 'Inter', sans-serif; }
             <label class="text-sm font-bold text-slate-700 block mb-3">Pilih Dokter Spesialis</label>
             <input type="hidden" name="doctor_id" id="doctor_id_input" required>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="doctor-cards">
-              <?php foreach ($doctors as $doc):
-                $stars    = round($doc['avg_rating']);
-                $ratingTxt = $doc['review_count'] > 0
-                  ? number_format($doc['avg_rating'], 1) . ' (' . $doc['review_count'] . ' ulasan)'
-                  : 'Belum ada ulasan';
-              ?>
+              <?php foreach ($doctors as $doc): ?>
               <div class="doctor-card border-2 border-slate-200 rounded-xl p-4 cursor-pointer hover:border-blue-400 hover:bg-blue-50/40 transition-all select-none"
                    data-doctor-id="<?= $doc['id'] ?>"
                    data-spec="<?= e($doc['specialization'] ?? '') ?>"
@@ -225,12 +233,6 @@ body { font-family: 'Inter', sans-serif; }
                   <div class="flex-1 min-w-0">
                     <p class="font-bold text-slate-900 text-sm truncate"><?= e($doc['name']) ?></p>
                     <p class="text-xs text-slate-500"><?= e($doc['specialization'] ?? 'Umum') ?></p>
-                    <div class="flex items-center gap-1 mt-1.5">
-                      <?php for ($i = 1; $i <= 5; $i++): ?>
-                        <span class="text-[14px] <?= $i <= $stars ? 'text-amber-400' : 'text-slate-200' ?>">★</span>
-                      <?php endfor; ?>
-                      <span class="text-xs text-slate-400 ml-1"><?= $ratingTxt ?></span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -260,11 +262,37 @@ body { font-family: 'Inter', sans-serif; }
 
 
 
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="text-sm font-bold text-slate-700 block mb-1.5">Jenis Kelamin</label>
+              <select name="gender" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+                <option value="">Pilih...</option>
+                <option value="male">Laki-laki</option>
+                <option value="female">Perempuan</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-bold text-slate-700 block mb-1.5">Usia (Tahun)</label>
+              <input type="number" name="age" required min="0" max="150" placeholder="Contoh: 25"
+                     class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+            </div>
+            <div>
+              <label class="text-sm font-bold text-slate-700 block mb-1.5">Golongan Darah</label>
+              <select name="blood_type" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+                <option value="">Pilih...</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="AB">AB</option>
+                <option value="O">O</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Reason -->
           <div>
-            <label class="text-sm font-bold text-slate-700 block mb-1.5">Keluhan / Alasan Kunjungan</label>
-            <textarea name="reason" rows="3" required placeholder="Tuliskan keluhan yang Anda rasakan..."
-                      class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"></textarea>
+            <label class="text-sm font-bold text-slate-700 block mb-1.5">Keluhan Utama</label>
+            <textarea name="reason" rows="3" placeholder="Ceritakan keluhan Anda secara singkat..."
+                      class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 leading-relaxed"></textarea>
           </div>
 
           <div class="pt-4">

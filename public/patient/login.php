@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
   <!-- Right Panel: Form -->
-  <div class="w-full md:w-1/2 flex flex-col items-center justify-center p-6 lg:p-12 bg-slate-50">
+  <div class="w-full md:w-1/2 flex flex-col items-center pt-16 justify-start p-6 lg:p-12 bg-slate-50">
     <div class="w-full max-w-[400px]">
 
       <!-- Back -->

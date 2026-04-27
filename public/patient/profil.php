@@ -2,6 +2,11 @@
 require_once __DIR__ . '/../../includes/functions.php';
 require_role('patient');
 $user = current_user();
+$pdo = db();
+
+$stmt = $pdo->prepare("SELECT gender, age, blood_type FROM patient_profiles WHERE user_id = ?");
+$stmt->execute([$user['id']]);
+$profile = $stmt->fetch();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -48,7 +53,6 @@ $user = current_user();
       $navItems = [
         ['icon'=>'home',    'label'=>'Beranda', 'href'=>'dashboard.php', 'active'=>false],
         ['icon'=>'history', 'label'=>'Riwayat', 'href'=>'riwayat.php',   'active'=>false],
-        ['icon'=>'star',    'label'=>'Ulasan',  'href'=>'ulasan.php',    'active'=>false],
         ['icon'=>'chat',    'label'=>'Chat',    'href'=>'chat.php',      'active'=>false],
         ['icon'=>'person',  'label'=>'Profil',  'href'=>'profil.php',    'active'=>true],
       ];
@@ -111,6 +115,24 @@ $user = current_user();
             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Role Akun</label>
             <div class="px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-medium text-slate-700">
               Pasien
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Jenis Kelamin</label>
+            <div class="px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 capitalize">
+              <?= e($profile['gender'] ?? '-') ?>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Usia</label>
+            <div class="px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-medium text-slate-700">
+              <?= $profile['age'] ? e($profile['age']) . ' Tahun' : '-' ?>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Golongan Darah</label>
+            <div class="px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 uppercase">
+              <?= e($profile['blood_type'] ?? '-') ?>
             </div>
           </div>
         </div>

@@ -76,9 +76,10 @@ try {
     <nav class="flex-1 p-4 space-y-1">
       <?php
       $navItems = [
-        ['icon'=>'home',          'label'=>'Beranda',    'href'=>'dashboard.php', 'active'=>true],
-        ['icon'=>'calendar_month','label'=>'Jadwal Saya','href'=>'jadwal.php',    'active'=>false],
-        ['icon'=>'chat',          'label'=>'Chat Pasien','href'=>'chat.php',      'active'=>false],
+        ['icon'=>'home',             'label'=>'Beranda',    'href'=>'dashboard.php',   'active'=>true],
+        ['icon'=>'calendar_month',   'label'=>'Jadwal',     'href'=>'jadwal.php',      'active'=>false],
+        ['icon'=>'chat',             'label'=>'Chat',       'href'=>'chat.php',        'active'=>false],
+        ['icon'=>'medical_services', 'label'=>'Konsultasi', 'href'=>'rekam_medis.php', 'active'=>false],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']

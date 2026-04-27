@@ -67,7 +67,6 @@ try {
       $navItems = [
         ['icon'=>'home',    'label'=>'Beranda', 'href'=>'dashboard.php', 'active'=>false],
         ['icon'=>'history', 'label'=>'Riwayat', 'href'=>'riwayat.php',   'active'=>true],
-        ['icon'=>'star',    'label'=>'Ulasan',  'href'=>'ulasan.php',    'active'=>false],
         ['icon'=>'chat',    'label'=>'Chat',    'href'=>'chat.php',      'active'=>false],
         ['icon'=>'person',  'label'=>'Profil',  'href'=>'profil.php',    'active'=>false],
       ];
