@@ -110,14 +110,6 @@ try {
         <h1 class="text-base font-bold text-slate-900">Halo, <?= e($user['name']) ?> 👋</h1>
         <p class="text-xs text-slate-500"><?= date('l, d F Y') ?></p>
       </div>
-      <div class="flex items-center gap-3">
-        <button class="relative p-2 text-slate-500 hover:text-primary transition-colors">
-          
-          <?php if ($pending > 0): ?>
-          <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          <?php endif; ?>
-        </button>
-      </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden">

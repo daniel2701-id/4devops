@@ -31,6 +31,7 @@ $stmt = $pdo->query(
      ORDER BY u.created_at DESC"
 );
 $doctors = $stmt->fetchAll();
+$totalDoctors = count($doctors);
 
 $success = flash('success');
 $error   = flash('error');
@@ -119,16 +120,14 @@ $error   = flash('error');
 
   <!-- Data Table -->
   <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-      <div class="relative w-full max-w-xs">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between gap-4">
+      <div class="relative flex-1 max-w-sm">
         <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
-        <input type="text" placeholder="Cari dokter..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500">
+        <input type="text" id="doctor-search" placeholder="Cari nama, email, spesialisasi..."
+          class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+          oninput="filterDoctors(this.value)">
       </div>
-      <div class="flex items-center gap-2">
-        <button class="p-2 border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50">
-          <span class="material-symbols-outlined text-[20px]">filter_list</span>
-        </button>
-      </div>
+      <span id="doctor-count" class="text-xs text-slate-500 font-medium">Menampilkan <?= count($doctors) ?> dokter</span>
     </div>
 
     <div class="overflow-x-auto">
@@ -152,7 +151,10 @@ $error   = flash('error');
           </tr>
           <?php else: ?>
           <?php foreach ($doctors as $doc): ?>
-          <tr class="hover:bg-slate-50/50 transition-colors group">
+          <tr class="hover:bg-slate-50/50 transition-colors group doctor-row"
+              data-name="<?= strtolower(e($doc['name'])) ?>"
+              data-email="<?= strtolower(e($doc['email'])) ?>"
+              data-spec="<?= strtolower(e($doc['specialization'] ?? '')) ?>">
             <td class="px-6 py-4">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center font-bold text-sm">
@@ -192,10 +194,10 @@ $error   = flash('error');
               <?php endif; ?>
             </td>
             <td class="px-6 py-4 text-right">
-              <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-teal-600 hover:border-teal-200 flex items-center justify-center shadow-sm" title="Edit Dokter">
+              <div class="flex items-center justify-end gap-2">
+                <a href="doctor_edit.php?id=<?= $doc['id'] ?>" class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-teal-600 hover:border-teal-200 flex items-center justify-center shadow-sm" title="Edit Dokter">
                   <span class="material-symbols-outlined text-[18px]">edit</span>
-                </button>
+                </a>
                 <form method="POST" onsubmit="return confirm('Yakin ingin menghapus dokter ini? Semua data terkait (termasuk jadwal) akan terhapus.');" class="inline">
                   <?= csrf_field() ?>
                   <input type="hidden" name="delete_doctor_id" value="<?= $doc['id'] ?>">
@@ -212,15 +214,30 @@ $error   = flash('error');
       </table>
     </div>
     <div class="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-      <span>Menampilkan <?= count($doctors) ?> dokter</span>
-      <div class="flex gap-1">
-        <button class="px-2 py-1 border border-slate-200 rounded disabled:opacity-50">Sebelumnnya</button>
-        <button class="px-2 py-1 border border-slate-200 rounded disabled:opacity-50">Selanjutnya</button>
-      </div>
+      <span id="footer-count">Menampilkan <?= count($doctors) ?> dokter</span>
     </div>
   </div>
 
 </main>
+
+<script>
+function filterDoctors(query) {
+  const q = query.toLowerCase().trim();
+  const rows = document.querySelectorAll('.doctor-row');
+  let visible = 0;
+  rows.forEach(row => {
+    const name  = row.dataset.name  || '';
+    const email = row.dataset.email || '';
+    const spec  = row.dataset.spec  || '';
+    const match = !q || name.includes(q) || email.includes(q) || spec.includes(q);
+    row.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  const label = `Menampilkan ${visible} dokter`;
+  document.getElementById('doctor-count').textContent = label;
+  document.getElementById('footer-count').textContent = label;
+}
+</script>
 
 </body>
 </html>

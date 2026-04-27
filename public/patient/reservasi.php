@@ -68,11 +68,10 @@ if (isset($_GET['slots']) && isset($_GET['doctor_id']) && isset($_GET['date'])) 
 // ---- Handle Booking POST ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_abort();
-    $doctorId       = (int) ($_POST['doctor_id'] ?? 0);
-    $date           = $_POST['scheduled_date'] ?? '';
-    $time           = $_POST['scheduled_time'] ?? '';
-    $reason         = sanitize_string($_POST['reason'] ?? '', 500);
-    $familyMemberId = (int) ($_POST['family_member_id'] ?? 0);
+    $doctorId    = (int) ($_POST['doctor_id'] ?? 0);
+    $date        = $_POST['scheduled_date'] ?? '';
+    $time        = $_POST['scheduled_time'] ?? '';
+    $reason      = sanitize_string($_POST['reason'] ?? '', 500);
 
     if (!$doctorId || empty($date) || empty($time)) {
         $error = 'Silakan pilih dokter, tanggal, dan waktu.';
@@ -82,67 +81,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (strtotime($scheduledAt) < time()) {
             $error = 'Waktu reservasi tidak boleh di masa lalu.';
         } else {
-            // Validate family member ownership
-            if ($familyMemberId > 0) {
-                $fmCheck = $pdo->prepare("SELECT id FROM family_members WHERE id = ? AND user_id = ? AND is_active = 1");
-                $fmCheck->execute([$familyMemberId, $user['id']]);
-                if (!$fmCheck->fetch()) {
-                    $error = 'Anggota keluarga tidak ditemukan.';
-                }
-            }
+            // CONFLICT CHECK: prevent double-booking for same doctor + same slot
+            $conflict = $pdo->prepare(
+                "SELECT id FROM appointments 
+                 WHERE doctor_id = ? AND scheduled_at = ? AND status NOT IN ('cancelled') LIMIT 1"
+            );
+            $conflict->execute([$doctorId, $scheduledAt]);
 
-            if (!$error) {
-                // CONFLICT CHECK: prevent double-booking for same doctor + same slot
-                $conflict = $pdo->prepare(
-                    "SELECT id FROM appointments 
-                     WHERE doctor_id = ? AND scheduled_at = ? AND status NOT IN ('cancelled') LIMIT 1"
-                );
-                $conflict->execute([$doctorId, $scheduledAt]);
+            if ($conflict->fetch()) {
+                $error = 'Slot waktu tersebut sudah dipesan oleh pasien lain. Silakan pilih waktu lain.';
+            } else {
+                try {
+                    $pdo->beginTransaction();
 
-                if ($conflict->fetch()) {
-                    $error = 'Slot waktu tersebut sudah dipesan oleh pasien lain. Silakan pilih waktu lain.';
-                } else {
-                    try {
-                        $pdo->beginTransaction();
+                    $stmt = $pdo->prepare(
+                        "INSERT INTO appointments (patient_id, doctor_id, scheduled_at, type, status, reason) 
+                         VALUES (?, ?, ?, 'Consultation', 'waiting', ?)"
+                    );
+                    $stmt->execute([$user['id'], $doctorId, $scheduledAt, $reason]);
+                    $apptId = (int) $pdo->lastInsertId();
 
-                        $stmt = $pdo->prepare(
-                            "INSERT INTO appointments (patient_id, family_member_id, doctor_id, scheduled_at, type, status, reason) 
-                             VALUES (?, ?, ?, ?, 'Consultation', 'waiting', ?)"
-                        );
-                        $stmt->execute([$user['id'], $familyMemberId ?: null, $doctorId, $scheduledAt, $reason]);
-                        $apptId = (int) $pdo->lastInsertId();
-
-                        // Fetch doctor name for notification
-                        $doc = $pdo->prepare("SELECT u.name FROM users u WHERE u.id = ? LIMIT 1");
-                        $doc->execute([$doctorId]);
-                        $docRow = $doc->fetch();
-
-                        // Build message with family member name if applicable
-                        $bookingFor = '';
-                        if ($familyMemberId) {
-                            $fm = $pdo->prepare("SELECT name FROM family_members WHERE id = ?");
-                            $fm->execute([$familyMemberId]);
-                            $fmRow = $fm->fetch();
-                            $bookingFor = ' (untuk ' . ($fmRow['name'] ?? 'anggota keluarga') . ')';
-                        }
-
-                        // Create in-app notification for patient
-                        $pdo->prepare(
-                            "INSERT INTO notifications (user_id, type, title, message, related_id) VALUES (?, 'info', ?, ?, ?)"
-                        )->execute([
-                            $user['id'],
-                            'Reservasi Berhasil Dibuat',
-                            'Reservasi Anda' . $bookingFor . ' dengan ' . ($docRow['name'] ?? 'dokter') . ' pada ' . date('d M Y, H:i', strtotime($scheduledAt)) . ' WIB telah dikonfirmasi.',
-                            $apptId
-                        ]);
-
-                        $pdo->commit();
-                        audit_log('create_appointment', $user['id'], "Doc ID: $doctorId, Date: $scheduledAt" . ($familyMemberId ? ", Family: $familyMemberId" : ''));
-                        $success = 'Reservasi berhasil dibuat!' . $bookingFor . ' Silakan cek menu Beranda untuk statusnya.';
-                    } catch (Exception $e) {
-                        $pdo->rollBack();
-                        $error = 'Terjadi kesalahan sistem. Silakan coba lagi.';
-                    }
+                    $pdo->commit();
+                    audit_log('create_appointment', $user['id'], "Doc ID: $doctorId, Date: $scheduledAt");
+                    $success = 'Reservasi berhasil dibuat! Silakan cek menu Beranda untuk statusnya.';
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    $error = 'Terjadi kesalahan sistem. Silakan coba lagi.';
                 }
             }
         }
@@ -165,12 +129,7 @@ $doctors = $pdo->query(
 $specializations = array_unique(array_filter(array_column($doctors, 'specialization')));
 sort($specializations);
 
-// Fetch family members for "booking for" dropdown
-$familyMembers = $pdo->prepare(
-    "SELECT id, name, relationship FROM family_members WHERE user_id = ? AND is_active = 1 ORDER BY name"
-);
-$familyMembers->execute([$user['id']]);
-$familyList = $familyMembers->fetchAll();
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -297,24 +256,7 @@ body { font-family: 'Inter', sans-serif; }
             <p id="slot-error" class="text-sm text-red-600 mt-2 hidden"></p>
           </div>
 
-          <!-- Booking For (Self or Family) -->
-          <?php if (!empty($familyList)): ?>
-          <div>
-            <label class="text-sm font-bold text-slate-700 block mb-1.5 flex items-center gap-2">
-              <span class="material-symbols-outlined text-purple-500 text-[16px]">family_restroom</span>
-              Reservasi Untuk
-            </label>
-            <select name="family_member_id"
-                    class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-              <option value="0">Diri Sendiri</option>
-              <?php foreach ($familyList as $fm):
-                $relLabel = ['anak'=>'Anak','pasangan'=>'Pasangan','orang_tua'=>'Orang Tua','saudara'=>'Saudara','lainnya'=>'Lainnya'][$fm['relationship']] ?? $fm['relationship'];
-              ?>
-              <option value="<?= $fm['id'] ?>"><?= e($fm['name']) ?> (<?= e($relLabel) ?>)</option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <?php endif; ?>
+
 
           <!-- Reason -->
           <div>

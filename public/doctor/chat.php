@@ -5,6 +5,10 @@ require_role('doctor');
 $user = current_user();
 $pdo  = db();
 
+$appointments = [];
+$selectedAppt = 0;
+$dbError      = '';
+
 // ---- AJAX: Send message ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_send'])) {
     header('Content-Type: application/json');
@@ -16,18 +20,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_send'])) {
         exit;
     }
 
-    $check = $pdo->prepare("SELECT id FROM appointments WHERE id = ? AND doctor_id = ? LIMIT 1");
-    $check->execute([$apptId, $user['id']]);
-    if (!$check->fetch()) {
-        echo json_encode(['ok' => false, 'error' => 'Tidak diizinkan.']);
-        exit;
+    try {
+        $check = $pdo->prepare("SELECT id FROM appointments WHERE id = ? AND doctor_id = ? LIMIT 1");
+        $check->execute([$apptId, $user['id']]);
+        if (!$check->fetch()) {
+            echo json_encode(['ok' => false, 'error' => 'Tidak diizinkan.']);
+            exit;
+        }
+
+        $body = sanitize_string($body, 2000);
+        $pdo->prepare("INSERT INTO messages (appointment_id, sender_id, body) VALUES (?, ?, ?)")
+            ->execute([$apptId, $user['id'], $body]);
+
+        echo json_encode(['ok' => true]);
+    } catch (Exception $e) {
+        echo json_encode(['ok' => false, 'error' => 'Gagal mengirim pesan.']);
     }
-
-    $body = sanitize_string($body, 2000);
-    $pdo->prepare("INSERT INTO messages (appointment_id, sender_id, body) VALUES (?, ?, ?)")
-        ->execute([$apptId, $user['id'], $body]);
-
-    echo json_encode(['ok' => true]);
     exit;
 }
 
@@ -36,44 +44,68 @@ if (isset($_GET['fetch']) && isset($_GET['appointment_id'])) {
     header('Content-Type: application/json');
     $apptId = (int) $_GET['appointment_id'];
 
-    $check = $pdo->prepare("SELECT id FROM appointments WHERE id = ? AND doctor_id = ? LIMIT 1");
-    $check->execute([$apptId, $user['id']]);
-    if (!$check->fetch()) {
-        echo json_encode(['messages' => [], 'error' => 'Tidak diizinkan.']);
-        exit;
+    try {
+        $check = $pdo->prepare("SELECT id FROM appointments WHERE id = ? AND doctor_id = ? LIMIT 1");
+        $check->execute([$apptId, $user['id']]);
+        if (!$check->fetch()) {
+            echo json_encode(['messages' => [], 'error' => 'Tidak diizinkan.']);
+            exit;
+        }
+
+        // Mark patient's messages as read
+        $pdo->prepare(
+            "UPDATE messages SET read_at = NOW() WHERE appointment_id = ? AND sender_id != ? AND read_at IS NULL"
+        )->execute([$apptId, $user['id']]);
+
+        $msgs = $pdo->prepare(
+            "SELECT m.*, u.name AS sender_name FROM messages m JOIN users u ON u.id = m.sender_id
+             WHERE m.appointment_id = ? ORDER BY m.created_at ASC"
+        );
+        $msgs->execute([$apptId]);
+
+        echo json_encode(['messages' => $msgs->fetchAll(PDO::FETCH_ASSOC)]);
+    } catch (Exception $e) {
+        echo json_encode(['messages' => [], 'error' => 'Gagal memuat pesan.']);
     }
-
-    // Mark patient's messages as read
-    $pdo->prepare(
-        "UPDATE messages SET read_at = NOW() WHERE appointment_id = ? AND sender_id != ? AND read_at IS NULL"
-    )->execute([$apptId, $user['id']]);
-
-    $msgs = $pdo->prepare(
-        "SELECT m.*, u.name AS sender_name FROM messages m JOIN users u ON u.id = m.sender_id
-         WHERE m.appointment_id = ? ORDER BY m.created_at ASC"
-    );
-    $msgs->execute([$apptId]);
-
-    echo json_encode(['messages' => $msgs->fetchAll(PDO::FETCH_ASSOC)]);
     exit;
 }
 
 // Fetch doctor's appointments with chat
-$appts = $pdo->prepare(
-    "SELECT a.id, a.scheduled_at, a.status, a.reason,
-            p.name AS patient_name,
-            (SELECT COUNT(*) FROM messages m2 WHERE m2.appointment_id = a.id AND m2.sender_id != ? AND m2.read_at IS NULL) AS unread
-     FROM appointments a
-     JOIN users p ON p.id = a.patient_id
-     WHERE a.doctor_id = ? AND a.status != 'cancelled'
-     ORDER BY a.scheduled_at DESC
-     LIMIT 30"
-);
-$appts->execute([$user['id'], $user['id']]);
-$appointments = $appts->fetchAll();
+try {
+    $appts = $pdo->prepare(
+        "SELECT a.id, a.scheduled_at, a.status, a.reason,
+                p.name AS patient_name,
+                (SELECT COUNT(*) FROM messages m2 WHERE m2.appointment_id = a.id AND m2.sender_id != ? AND m2.read_at IS NULL) AS unread
+         FROM appointments a
+         JOIN users p ON p.id = a.patient_id
+         WHERE a.doctor_id = ? AND a.status != 'cancelled'
+         ORDER BY a.scheduled_at DESC
+         LIMIT 30"
+    );
+    $appts->execute([$user['id'], $user['id']]);
+    $appointments = $appts->fetchAll();
+} catch (Exception $e) {
+    // Fallback: fetch without unread count (if messages table missing)
+    try {
+        $appts = $pdo->prepare(
+            "SELECT a.id, a.scheduled_at, a.status, a.reason,
+                    p.name AS patient_name, 0 AS unread
+             FROM appointments a
+             JOIN users p ON p.id = a.patient_id
+             WHERE a.doctor_id = ? AND a.status != 'cancelled'
+             ORDER BY a.scheduled_at DESC
+             LIMIT 30"
+        );
+        $appts->execute([$user['id']]);
+        $appointments = $appts->fetchAll();
+    } catch (Exception $e2) {
+        $dbError = 'Tidak dapat memuat data konsultasi.';
+    }
+}
 
 $selectedAppt = (int) ($_GET['appt'] ?? ($appointments[0]['id'] ?? 0));
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>

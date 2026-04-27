@@ -17,62 +17,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($rating < 1 || $rating > 5) {
         $error = 'Rating harus antara 1 sampai 5 bintang.';
     } else {
-        // Verify appointment belongs to this patient and is finished
-        $appt = $pdo->prepare(
-            "SELECT id, doctor_id FROM appointments WHERE id = ? AND patient_id = ? AND status = 'finished' LIMIT 1"
-        );
-        $appt->execute([$apptId, $user['id']]);
-        $apptRow = $appt->fetch();
+        try {
+            // Verify appointment belongs to this patient and is finished
+            $appt = $pdo->prepare(
+                "SELECT id, doctor_id FROM appointments WHERE id = ? AND patient_id = ? AND status = 'finished' LIMIT 1"
+            );
+            $appt->execute([$apptId, $user['id']]);
+            $apptRow = $appt->fetch();
 
-        if (!$apptRow) {
-            $error = 'Reservasi tidak ditemukan atau belum selesai.';
-        } else {
-            // Check duplicate review
-            $dup = $pdo->prepare("SELECT id FROM reviews WHERE appointment_id = ? LIMIT 1");
-            $dup->execute([$apptId]);
-            if ($dup->fetch()) {
-                $error = 'Anda sudah memberikan ulasan untuk konsultasi ini.';
+            if (!$apptRow) {
+                $error = 'Reservasi tidak ditemukan atau belum selesai.';
             } else {
-                try {
+                // Check duplicate review
+                $dup = $pdo->prepare("SELECT id FROM reviews WHERE appointment_id = ? LIMIT 1");
+                $dup->execute([$apptId]);
+                if ($dup->fetch()) {
+                    $error = 'Anda sudah memberikan ulasan untuk konsultasi ini.';
+                } else {
                     $pdo->prepare(
                         "INSERT INTO reviews (appointment_id, patient_id, doctor_id, rating, comment) VALUES (?, ?, ?, ?, ?)"
                     )->execute([$apptId, $user['id'], $apptRow['doctor_id'], $rating, $comment]);
-                    audit_log('review_submitted', $user['id'], "Appt: $apptId, Rating: $rating");
+
+                    if (function_exists('audit_log')) {
+                        audit_log('review_submitted', $user['id'], "Appt: $apptId, Rating: $rating");
+                    }
                     $success = 'Ulasan berhasil dikirimkan. Terima kasih!';
-                } catch (Exception $e) {
-                    $error = 'Terjadi kesalahan. Silakan coba lagi.';
                 }
             }
+        } catch (Exception $e) {
+            $error = 'Terjadi kesalahan. Silakan coba lagi.';
         }
     }
 }
 
 // Fetch finished appointments without review
-$pendingReview = $pdo->prepare(
-    "SELECT a.id, a.scheduled_at, u.name AS doctor_name, dp.specialization
-     FROM appointments a
-     JOIN users u ON u.id = a.doctor_id
-     LEFT JOIN doctor_profiles dp ON dp.user_id = u.id
-     LEFT JOIN reviews r ON r.appointment_id = a.id
-     WHERE a.patient_id = ? AND a.status = 'finished' AND r.id IS NULL
-     ORDER BY a.scheduled_at DESC"
-);
-$pendingReview->execute([$user['id']]);
-$pending = $pendingReview->fetchAll();
+$pending = [];
+try {
+    $pendingReview = $pdo->prepare(
+        "SELECT a.id, a.scheduled_at, u.name AS doctor_name, dp.specialization
+         FROM appointments a
+         JOIN users u ON u.id = a.doctor_id
+         LEFT JOIN doctor_profiles dp ON dp.user_id = u.id
+         LEFT JOIN reviews r ON r.appointment_id = a.id
+         WHERE a.patient_id = ? AND a.status = 'finished' AND r.id IS NULL
+         ORDER BY a.scheduled_at DESC"
+    );
+    $pendingReview->execute([$user['id']]);
+    $pending = $pendingReview->fetchAll();
+} catch (Exception $e) {
+    // reviews table may not exist yet
+}
 
 // Fetch submitted reviews
-$myReviews = $pdo->prepare(
-    "SELECT r.*, a.scheduled_at, u.name AS doctor_name, dp.specialization
-     FROM reviews r
-     JOIN appointments a ON a.id = r.appointment_id
-     JOIN users u ON u.id = r.doctor_id
-     LEFT JOIN doctor_profiles dp ON dp.user_id = u.id
-     WHERE r.patient_id = ?
-     ORDER BY r.created_at DESC"
-);
-$myReviews->execute([$user['id']]);
-$reviewed = $myReviews->fetchAll();
+$reviewed = [];
+try {
+    $myReviews = $pdo->prepare(
+        "SELECT r.*, a.scheduled_at, u.name AS doctor_name, dp.specialization
+         FROM reviews r
+         JOIN appointments a ON a.id = r.appointment_id
+         JOIN users u ON u.id = r.doctor_id
+         LEFT JOIN doctor_profiles dp ON dp.user_id = u.id
+         WHERE r.patient_id = ?
+         ORDER BY r.created_at DESC"
+    );
+    $myReviews->execute([$user['id']]);
+    $reviewed = $myReviews->fetchAll();
+} catch (Exception $e) {
+    // reviews table may not exist yet
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>

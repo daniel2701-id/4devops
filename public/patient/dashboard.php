@@ -7,7 +7,6 @@ $pdo  = db();
 
 $upcoming = [];
 $pastCount = 0;
-$unreadNotif = 0;
 $pendingReviewCount = 0;
 
 try {
@@ -27,11 +26,6 @@ try {
     $stmt2 = $pdo->prepare('SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND status = ?');
     $stmt2->execute([$user['id'], 'finished']);
     $pastCount = (int) $stmt2->fetchColumn();
-
-    // Unread notifications
-    $notifStmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
-    $notifStmt->execute([$user['id']]);
-    $unreadNotif = (int) $notifStmt->fetchColumn();
 
     // Pending reviews (finished appointments without review)
     $revStmt = $pdo->prepare(
@@ -90,13 +84,11 @@ try {
     <nav class="flex-1 p-4 space-y-1">
       <?php
       $navItems = [
-        ['icon'=>'home',          'label'=>'Beranda',   'href'=>'dashboard.php', 'active'=>true,  'badge'=>0],
-        ['icon'=>'history',       'label'=>'Riwayat',   'href'=>'riwayat.php',   'active'=>false, 'badge'=>0],
-        ['icon'=>'star',          'label'=>'Ulasan',    'href'=>'ulasan.php',    'active'=>false, 'badge'=>$pendingReviewCount],
-        ['icon'=>'notifications', 'label'=>'Notifikasi','href'=>'notifikasi.php','active'=>false, 'badge'=>$unreadNotif],
-        ['icon'=>'family_restroom','label'=>'Keluarga', 'href'=>'keluarga.php',  'active'=>false, 'badge'=>0],
-        ['icon'=>'chat',          'label'=>'Chat',      'href'=>'chat.php',      'active'=>false, 'badge'=>0],
-        ['icon'=>'person',        'label'=>'Profil',    'href'=>'profil.php',    'active'=>false, 'badge'=>0],
+        ['icon'=>'home',    'label'=>'Beranda', 'href'=>'dashboard.php', 'active'=>true,  'badge'=>0],
+        ['icon'=>'history', 'label'=>'Riwayat', 'href'=>'riwayat.php',   'active'=>false, 'badge'=>0],
+        ['icon'=>'star',    'label'=>'Ulasan',  'href'=>'ulasan.php',    'active'=>false, 'badge'=>$pendingReviewCount],
+        ['icon'=>'chat',    'label'=>'Chat',    'href'=>'chat.php',      'active'=>false, 'badge'=>0],
+        ['icon'=>'person',  'label'=>'Profil',  'href'=>'profil.php',    'active'=>false, 'badge'=>0],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']
@@ -128,25 +120,18 @@ try {
   <main class="flex-1 p-6 lg:p-8 overflow-auto bg-surface-container-lowest">
 
     <!-- Header -->
-    <div class="mb-8 flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-black text-on-surface">Selamat datang, <?= e(explode(' ', $user['name'])[0]) ?>!</h1>
-        <p class="text-on-surface-variant font-medium mt-1">Kelola jadwal dan reservasi kesehatan Anda di sini.</p>
-      </div>
-      <button class="w-10 h-10 rounded-full border border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary transition-colors flex items-center justify-center relative">
-        
-        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
-      </button>
+    <div class="mb-8">
+      <h1 class="text-2xl font-black text-on-surface">Selamat datang, <?= e(explode(' ', $user['name'])[0]) ?>!</h1>
+      <p class="text-on-surface-variant font-medium mt-1">Kelola jadwal dan reservasi kesehatan Anda di sini.</p>
     </div>
 
     <!-- Stats Row -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
       <?php
       $stats = [
-        ['label'=>'Janji Mendatang',  'value'=>count($upcoming),    'icon'=>'event',         'color'=>'blue'],
-        ['label'=>'Riwayat Kunjungan','value'=>$pastCount,          'icon'=>'history_edu',   'color'=>'purple'],
-        ['label'=>'Ulasan Tertunda',  'value'=>$pendingReviewCount, 'icon'=>'star',          'color'=>'amber'],
-        ['label'=>'Notifikasi Baru',  'value'=>$unreadNotif,        'icon'=>'notifications', 'color'=>'red'],
+        ['label'=>'Janji Mendatang',  'value'=>count($upcoming),    'icon'=>'event',       'color'=>'blue'],
+        ['label'=>'Riwayat Kunjungan','value'=>$pastCount,          'icon'=>'history_edu', 'color'=>'purple'],
+        ['label'=>'Ulasan Tertunda',  'value'=>$pendingReviewCount, 'icon'=>'star',        'color'=>'amber'],
       ];
       foreach ($stats as $s):
         $bg   = "bg-{$s['color']}-50";
