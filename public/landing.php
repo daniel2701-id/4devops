@@ -36,7 +36,7 @@ $timeout = !empty($_GET['timeout']) ? 'Sesi Anda telah berakhir. Silakan masuk k
           <span class="material-symbols-outlined text-primary transform -rotate-45 text-[18px]"
             style="font-variation-settings:'FILL' 1;">medical_services</span>
         </div>
-        <span class="text-xl font-extrabold tracking-tight text-slate-900">CareConnect</span>
+        <span class="text-xl font-extrabold tracking-tight text-slate-900">Andi Daniel Tenri Dio</span>
       </a>
     </div>
   </nav>
