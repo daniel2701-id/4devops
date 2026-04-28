@@ -85,7 +85,7 @@ if (is_logged_in()) {
 
     <!-- Brand -->
     <h1 class="text-5xl md:text-6xl font-black tracking-tight text-on-surface mb-4 delay-1 animate-fade-up">
-      CareConnect
+      Andi Daniel Tenri Dio
     </h1>
     <p class="text-lg md:text-xl text-on-surface-variant font-medium max-w-lg mx-auto mb-10 delay-2 animate-fade-up">
       Portal Kesehatan Terpadu – Presisi, Kemudahan, dan Performa untuk Lingkungan Medis Modern.
