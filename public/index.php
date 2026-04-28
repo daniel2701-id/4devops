@@ -14,7 +14,7 @@ if (is_logged_in()) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CareConnect – Portal Kesehatan Terpadu</title>
+  <title>Andi Daniel Tenri Dio – Portal Kesehatan Terpadu</title>
   <?= tailwind_cdn() ?>
   <?= tailwind_config() ?>
   <?= google_fonts() ?>
