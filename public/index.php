@@ -14,7 +14,7 @@ if (is_logged_in()) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Andi Daniel Tenri Dio – Portal Kesehatan Terpadu</title>
+  <title>CareConnect – Portal Kesehatan Terpadu</title>
   <?= tailwind_cdn() ?>
   <?= tailwind_config() ?>
   <?= google_fonts() ?>
@@ -85,7 +85,7 @@ if (is_logged_in()) {
 
     <!-- Brand -->
     <h1 class="text-5xl md:text-6xl font-black tracking-tight text-on-surface mb-4 delay-1 animate-fade-up">
-      Andi Daniel Tenri Dio
+      CareConnect
     </h1>
     <p class="text-lg md:text-xl text-on-surface-variant font-medium max-w-lg mx-auto mb-10 delay-2 animate-fade-up">
       Portal Kesehatan Terpadu – Presisi, Kemudahan, dan Performa untuk Lingkungan Medis Modern.
