@@ -18,7 +18,7 @@ if (!$apptId) {
 // ---- PDF Download ----
 if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
     $stmt = $pdo->prepare(
-        "SELECT a.*, p.name AS patient_name, pp.gender, pp.birth_date, pp.blood_type, pp.nik, pp.phone,
+        "SELECT a.*, p.name AS patient_name, pp.gender, pp.birth_date, pp.age, pp.blood_type, pp.nik, pp.phone,
                 u.name AS doctor_name, dp.specialization, dp.license_number
          FROM appointments a 
          JOIN users p ON p.id = a.patient_id 
@@ -39,15 +39,22 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
     if (!$recData) { die('Rekam medis belum diisi.'); }
 
     // Generate clean HTML for print/PDF
-    $ageYears = $apptData['birth_date']
-        ? date_diff(date_create($apptData['birth_date']), date_create('now'))->y . ' tahun'
-        : '-';
+    $ageYears = '-';
+    if (!empty($apptData['birth_date'])) {
+        $ageYears = date_diff(date_create($apptData['birth_date']), date_create('now'))->y . ' Tahun';
+    } elseif (!empty($apptData['age'])) {
+        $ageYears = $apptData['age'] . ' Tahun';
+    }
 
     $prescLines     = nl2br(htmlspecialchars($recData['prescription'] ?? '-'));
     $diagnosisHtml  = nl2br(htmlspecialchars($recData['diagnosis'] ?? '-'));
     $treatmentHtml  = nl2br(htmlspecialchars($recData['treatment'] ?? '-'));
     $scheduledDate  = date('d F Y', strtotime($apptData['scheduled_at']));
     $todayDate      = date('d F Y');
+    
+    $cleanName = preg_replace("/[^a-zA-Z0-9]+/", "", $apptData['patient_name']);
+    $fileDate = date("Y-m-d", strtotime($apptData['scheduled_at']));
+    $pdfFilename = "Resep_{$cleanName}_{$fileDate}.pdf";
 
     header('Content-Type: text/html; charset=UTF-8');
     echo <<<HTML
@@ -131,7 +138,7 @@ window.addEventListener('load', () => {
     const element = document.body;
     const opt = {
       margin:       0.5,
-      filename:     'Resep_{$apptData['patient_name']}.pdf',
+      filename:     '{$pdfFilename}',
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2 },
       jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
@@ -147,7 +154,7 @@ HTML;
 
 // Check appointment
 $stmt = $pdo->prepare(
-    "SELECT a.*, p.name AS patient_name, pp.gender, pp.birth_date, pp.blood_type 
+    "SELECT a.*, p.name AS patient_name, pp.gender, pp.birth_date, pp.age, pp.blood_type 
      FROM appointments a 
      JOIN users p ON p.id = a.patient_id 
      LEFT JOIN patient_profiles pp ON pp.user_id = p.id
@@ -218,7 +225,12 @@ $stmt2->execute([$apptId]);
 $record = $stmt2->fetch() ?: [];
 
 
-$age = $appt['birth_date'] ? date_diff(date_create($appt['birth_date']), date_create('now'))->y : '-';
+$ageDisplay = '-';
+if (!empty($appt['birth_date'])) {
+    $ageDisplay = date_diff(date_create($appt['birth_date']), date_create('now'))->y . ' Tahun';
+} elseif (!empty($appt['age'])) {
+    $ageDisplay = $appt['age'] . ' Tahun';
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -316,7 +328,7 @@ $age = $appt['birth_date'] ? date_diff(date_create($appt['birth_date']), date_cr
             </div>
             <div class="flex justify-between border-b border-slate-100 pb-2">
               <span class="text-slate-500">Usia</span>
-              <span class="font-medium text-slate-800"><?= $age ?> tahun</span>
+              <span class="font-medium text-slate-800"><?= $ageDisplay ?></span>
             </div>
             <div class="flex justify-between border-b border-slate-100 pb-2">
               <span class="text-slate-500">Gol. Darah</span>

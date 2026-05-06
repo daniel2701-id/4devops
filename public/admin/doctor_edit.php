@@ -29,6 +29,12 @@ if (!$doc) {
     exit;
 }
 
+// Strip existing title/gelar for clean display
+$cleanName = $doc['name'];
+$cleanName = preg_replace('/^(dr\.|drg\.)\s*/i', '', $cleanName);
+$cleanName = preg_replace('/,\s*Sp\.[a-zA-Z]+$/i', '', $cleanName);
+$doc['clean_name'] = $cleanName;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_abort();
     $name           = sanitize_string($_POST['name'] ?? '', 150);
@@ -39,6 +45,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $isActive       = isset($_POST['is_active']) ? 1 : 0;
     $isAvailable    = isset($_POST['is_available']) ? 1 : 0;
     $newPassword    = $_POST['new_password'] ?? '';
+
+    // Auto title assignment based on specialization
+    $specTitles = [
+        'Umum' => ['dr. ', ''],
+        'Penyakit Dalam' => ['dr. ', ', Sp.PD'],
+        'Jantung & Pembuluh Darah' => ['dr. ', ', Sp.JP'],
+        'Anak' => ['dr. ', ', Sp.A'],
+        'Kandungan & Kebidanan' => ['dr. ', ', Sp.OG'],
+        'Bedah Umum' => ['dr. ', ', Sp.B'],
+        'Saraf' => ['dr. ', ', Sp.S'],
+        'Orthopedi' => ['dr. ', ', Sp.OT'],
+        'THT' => ['dr. ', ', Sp.THT'],
+        'Mata' => ['dr. ', ', Sp.M'],
+        'Kulit & Kelamin' => ['dr. ', ', Sp.KK'],
+        'Paru' => ['dr. ', ', Sp.P'],
+        'Urologi' => ['dr. ', ', Sp.U'],
+        'Psikiatri' => ['dr. ', ', Sp.KJ'],
+        'Gigi & Mulut' => ['drg. ', ''],
+        'Radiologi' => ['dr. ', ', Sp.Rad'],
+        'Anestesi' => ['dr. ', ', Sp.An'],
+        'Rehabilitasi Medik' => ['dr. ', ', Sp.KFR']
+    ];
+
+    if (isset($specTitles[$specialization])) {
+        $prefix = $specTitles[$specialization][0];
+        $suffix = $specTitles[$specialization][1];
+        $name = preg_replace('/^(dr\.|drg\.)\s*/i', '', $name);
+        $name = preg_replace('/,\s*Sp\.[a-zA-Z]+$/i', '', $name);
+        $name = $prefix . $name . $suffix;
+    }
 
     if (empty($name) || empty($email)) {
         $error = 'Nama dan Email wajib diisi.';
@@ -99,6 +135,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $doc['phone']         = $_POST['phone'] ?? $doc['phone'];
     $doc['is_active']     = $isActive ?? $doc['is_active'];
     $doc['is_available']  = $isAvailable ?? $doc['is_available'];
+    
+    // Update clean name for repopulation
+    $cleanName = $doc['name'];
+    $cleanName = preg_replace('/^(dr\.|drg\.)\s*/i', '', $cleanName);
+    $cleanName = preg_replace('/,\s*Sp\.[a-zA-Z]+$/i', '', $cleanName);
+    $doc['clean_name'] = $cleanName;
 }
 ?>
 <!DOCTYPE html>
@@ -193,8 +235,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nama Lengkap & Gelar *</label>
-            <input type="text" name="name" required value="<?= e($doc['name']) ?>"
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nama Lengkap (Tanpa Gelar) *</label>
+            <input type="text" name="name" required value="<?= e($doc['clean_name'] ?? '') ?>" placeholder="Contoh: Andi Daniel"
               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all">
           </div>
           <div class="flex flex-col gap-1.5">
@@ -220,16 +262,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Spesialisasi</label>
-            <input type="text" name="specialization" list="spec-list" value="<?= e($doc['specialization'] ?? '') ?>"
-              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all">
-            <datalist id="spec-list">
-              <option value="Umum">
-              <option value="Penyakit Dalam">
-              <option value="Anak">
-              <option value="Kandungan & Kebidanan">
-              <option value="Gigi & Mulut">
-            </datalist>
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Spesialisasi *</label>
+            <?php $currSpec = $doc['specialization'] ?? ''; ?>
+            <select name="specialization" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all">
+              <option value="">Pilih Spesialisasi...</option>
+              <option value="Umum" <?= $currSpec == 'Umum' ? 'selected' : '' ?>>Umum</option>
+              <option value="Penyakit Dalam" <?= $currSpec == 'Penyakit Dalam' ? 'selected' : '' ?>>Penyakit Dalam</option>
+              <option value="Jantung & Pembuluh Darah" <?= $currSpec == 'Jantung & Pembuluh Darah' ? 'selected' : '' ?>>Jantung & Pembuluh Darah</option>
+              <option value="Anak" <?= $currSpec == 'Anak' ? 'selected' : '' ?>>Anak</option>
+              <option value="Kandungan & Kebidanan" <?= $currSpec == 'Kandungan & Kebidanan' ? 'selected' : '' ?>>Kandungan & Kebidanan</option>
+              <option value="Bedah Umum" <?= $currSpec == 'Bedah Umum' ? 'selected' : '' ?>>Bedah Umum</option>
+              <option value="Saraf" <?= $currSpec == 'Saraf' ? 'selected' : '' ?>>Saraf</option>
+              <option value="Orthopedi" <?= $currSpec == 'Orthopedi' ? 'selected' : '' ?>>Orthopedi</option>
+              <option value="THT" <?= $currSpec == 'THT' ? 'selected' : '' ?>>THT</option>
+              <option value="Mata" <?= $currSpec == 'Mata' ? 'selected' : '' ?>>Mata</option>
+              <option value="Kulit & Kelamin" <?= $currSpec == 'Kulit & Kelamin' ? 'selected' : '' ?>>Kulit & Kelamin</option>
+              <option value="Paru" <?= $currSpec == 'Paru' ? 'selected' : '' ?>>Paru</option>
+              <option value="Urologi" <?= $currSpec == 'Urologi' ? 'selected' : '' ?>>Urologi</option>
+              <option value="Psikiatri" <?= $currSpec == 'Psikiatri' ? 'selected' : '' ?>>Psikiatri</option>
+              <option value="Gigi & Mulut" <?= $currSpec == 'Gigi & Mulut' ? 'selected' : '' ?>>Gigi & Mulut</option>
+              <option value="Radiologi" <?= $currSpec == 'Radiologi' ? 'selected' : '' ?>>Radiologi</option>
+              <option value="Anestesi" <?= $currSpec == 'Anestesi' ? 'selected' : '' ?>>Anestesi</option>
+              <option value="Rehabilitasi Medik" <?= $currSpec == 'Rehabilitasi Medik' ? 'selected' : '' ?>>Rehabilitasi Medik</option>
+            </select>
           </div>
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nomor STR</label>

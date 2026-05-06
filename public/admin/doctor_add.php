@@ -15,6 +15,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $license        = sanitize_string($_POST['license_number'] ?? '', 50);
     $phone          = sanitize_string($_POST['phone'] ?? '', 20);
 
+    // Auto title assignment based on specialization
+    $specTitles = [
+        'Umum' => ['dr. ', ''],
+        'Penyakit Dalam' => ['dr. ', ', Sp.PD'],
+        'Jantung & Pembuluh Darah' => ['dr. ', ', Sp.JP'],
+        'Anak' => ['dr. ', ', Sp.A'],
+        'Kandungan & Kebidanan' => ['dr. ', ', Sp.OG'],
+        'Bedah Umum' => ['dr. ', ', Sp.B'],
+        'Saraf' => ['dr. ', ', Sp.S'],
+        'Orthopedi' => ['dr. ', ', Sp.OT'],
+        'THT' => ['dr. ', ', Sp.THT'],
+        'Mata' => ['dr. ', ', Sp.M'],
+        'Kulit & Kelamin' => ['dr. ', ', Sp.KK'],
+        'Paru' => ['dr. ', ', Sp.P'],
+        'Urologi' => ['dr. ', ', Sp.U'],
+        'Psikiatri' => ['dr. ', ', Sp.KJ'],
+        'Gigi & Mulut' => ['drg. ', ''],
+        'Radiologi' => ['dr. ', ', Sp.Rad'],
+        'Anestesi' => ['dr. ', ', Sp.An'],
+        'Rehabilitasi Medik' => ['dr. ', ', Sp.KFR']
+    ];
+
+    if (isset($specTitles[$specialization])) {
+        $prefix = $specTitles[$specialization][0];
+        $suffix = $specTitles[$specialization][1];
+        // Clean name just in case user typed dr. manually
+        $name = preg_replace('/^(dr\.|drg\.)\s*/i', '', $name);
+        $name = preg_replace('/,\s*Sp\.[A-Z]+$/i', '', $name);
+        $name = $prefix . $name . $suffix;
+    }
+
     $passErrors = validate_password_strength($password);
 
     if (empty($name) || empty($email) || empty($password)) {
@@ -146,8 +177,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nama Lengkap & Gelar *</label>
-            <input type="text" name="name" placeholder="dr. Nama Lengkap, Sp.A" required
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nama Lengkap (Tanpa Gelar) *</label>
+            <input type="text" name="name" placeholder="Contoh: Andi Daniel" required
               value="<?= e($_POST['name'] ?? '') ?>"
               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all">
           </div>
@@ -176,17 +207,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Spesialisasi</label>
-            <input type="text" name="specialization" list="spec-list" placeholder="Pilih atau ketik spesialisasi..." required
-              value="<?= e($_POST['specialization'] ?? '') ?>"
-              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
-            <datalist id="spec-list">
-              <option value="Umum">
-              <option value="Penyakit Dalam">
-              <option value="Anak">
-              <option value="Kandungan & Kebidanan">
-              <option value="Gigi & Mulut">
-            </datalist>
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Spesialisasi *</label>
+            <select name="specialization" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all">
+              <option value="">Pilih Spesialisasi...</option>
+              <option value="Umum" <?= ($_POST['specialization'] ?? '') == 'Umum' ? 'selected' : '' ?>>Umum</option>
+              <option value="Penyakit Dalam" <?= ($_POST['specialization'] ?? '') == 'Penyakit Dalam' ? 'selected' : '' ?>>Penyakit Dalam</option>
+              <option value="Jantung & Pembuluh Darah" <?= ($_POST['specialization'] ?? '') == 'Jantung & Pembuluh Darah' ? 'selected' : '' ?>>Jantung & Pembuluh Darah</option>
+              <option value="Anak" <?= ($_POST['specialization'] ?? '') == 'Anak' ? 'selected' : '' ?>>Anak</option>
+              <option value="Kandungan & Kebidanan" <?= ($_POST['specialization'] ?? '') == 'Kandungan & Kebidanan' ? 'selected' : '' ?>>Kandungan & Kebidanan</option>
+              <option value="Bedah Umum" <?= ($_POST['specialization'] ?? '') == 'Bedah Umum' ? 'selected' : '' ?>>Bedah Umum</option>
+              <option value="Saraf" <?= ($_POST['specialization'] ?? '') == 'Saraf' ? 'selected' : '' ?>>Saraf</option>
+              <option value="Orthopedi" <?= ($_POST['specialization'] ?? '') == 'Orthopedi' ? 'selected' : '' ?>>Orthopedi</option>
+              <option value="THT" <?= ($_POST['specialization'] ?? '') == 'THT' ? 'selected' : '' ?>>THT</option>
+              <option value="Mata" <?= ($_POST['specialization'] ?? '') == 'Mata' ? 'selected' : '' ?>>Mata</option>
+              <option value="Kulit & Kelamin" <?= ($_POST['specialization'] ?? '') == 'Kulit & Kelamin' ? 'selected' : '' ?>>Kulit & Kelamin</option>
+              <option value="Paru" <?= ($_POST['specialization'] ?? '') == 'Paru' ? 'selected' : '' ?>>Paru</option>
+              <option value="Urologi" <?= ($_POST['specialization'] ?? '') == 'Urologi' ? 'selected' : '' ?>>Urologi</option>
+              <option value="Psikiatri" <?= ($_POST['specialization'] ?? '') == 'Psikiatri' ? 'selected' : '' ?>>Psikiatri</option>
+              <option value="Gigi & Mulut" <?= ($_POST['specialization'] ?? '') == 'Gigi & Mulut' ? 'selected' : '' ?>>Gigi & Mulut</option>
+              <option value="Radiologi" <?= ($_POST['specialization'] ?? '') == 'Radiologi' ? 'selected' : '' ?>>Radiologi</option>
+              <option value="Anestesi" <?= ($_POST['specialization'] ?? '') == 'Anestesi' ? 'selected' : '' ?>>Anestesi</option>
+              <option value="Rehabilitasi Medik" <?= ($_POST['specialization'] ?? '') == 'Rehabilitasi Medik' ? 'selected' : '' ?>>Rehabilitasi Medik</option>
+            </select>
           </div>
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nomor STR</label>
