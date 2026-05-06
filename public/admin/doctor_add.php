@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $suffix = $specTitles[$specialization][1];
         // Clean name just in case user typed dr. manually
         $name = preg_replace('/^(dr\.|drg\.)\s*/i', '', $name);
-        $name = preg_replace('/,\s*Sp\.[A-Z]+$/i', '', $name);
+        $name = preg_replace('/(,\s*)?Sp\.[a-zA-Z]+$/i', '', $name);
         $name = $prefix . $name . $suffix;
     }
 

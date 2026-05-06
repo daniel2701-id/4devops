@@ -77,6 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Slot waktu tersebut sudah dipesan. Silakan pilih waktu lain.';
             } else {
                 try {
+                    $pdo->exec("ALTER TABLE patient_profiles ADD COLUMN age INT NULL AFTER birth_date");
+                } catch (Exception $e) {}
+
+                try {
                     $pdo->beginTransaction();
 
                     $stmt = $pdo->prepare(
@@ -84,10 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          VALUES (?, ?, ?, 'Consultation', 'waiting', ?)"
                     );
                     $stmt->execute([$user['id'], $doctorId, $scheduledAt, $reason]);
-
-                    try {
-                        $pdo->exec("ALTER TABLE patient_profiles ADD COLUMN age INT NULL AFTER birth_date");
-                    } catch (Exception $e) {}
 
                     $pdo->prepare(
                         "INSERT INTO patient_profiles (user_id, gender, age, blood_type) 
@@ -99,7 +99,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     audit_log('create_appointment', $user['id'], "Doc ID: $doctorId, Date: $scheduledAt");
                     $success = 'Reservasi berhasil dibuat! Silakan cek menu Beranda untuk statusnya.';
                 } catch (Exception $e) {
-                    $pdo->rollBack();
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
                     $error = 'Terjadi kesalahan sistem. Silakan coba lagi.';
                 }
             }
@@ -224,8 +226,8 @@ body { font-family: 'Inter', sans-serif; }
                 </div>
                 <div id="no-doctor-msg" class="hidden p-6 text-center bg-amber-50 border border-amber-200 rounded-xl">
                     <span class="material-symbols-outlined text-amber-500 text-4xl mb-2">warning</span>
-                    <p class="text-amber-800 font-bold">Mohon maaf, tidak ada dokter spesialis yang direkomendasikan saat ini.</p>
-                    <p class="text-sm text-amber-700 mt-1">Silakan pilih spesialisasi Umum sebagai alternatif.</p>
+                    <p class="text-amber-800 font-bold">Mohon maaf, tidak ada dokter Spesialis <span id="no-doc-spec-name"></span> yang tersedia saat ini.</p>
+                    <p class="text-sm text-amber-700 mt-1">Sesuai anjuran medis, silakan pilih spesialisasi Umum sebagai alternatif pertama.</p>
                     <button type="button" onclick="loadDoctorsForSpec('Umum')" class="mt-4 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-bold hover:bg-amber-700">Tampilkan Dokter Umum</button>
                 </div>
             </div>
@@ -417,17 +419,18 @@ function loadDoctorsForSpec(spec) {
     
     container.innerHTML = '';
     
-    // Filter doctors by exact specialization match, fallback to 'Umum' if user clicked the button
-    const filtered = allDoctors.filter(d => d.specialization === spec);
+    let filtered = allDoctors.filter(d => d.specialization === spec);
     
     if (filtered.length === 0) {
         container.classList.add('hidden');
+        document.getElementById('no-doc-spec-name').textContent = spec;
         noMsg.classList.remove('hidden');
     } else {
         container.classList.remove('hidden');
         noMsg.classList.add('hidden');
-        
-        filtered.forEach(doc => {
+    }
+    
+    filtered.forEach(doc => {
             const div = document.createElement('div');
             div.className = 'doctor-card border-2 border-slate-200 rounded-xl p-4 cursor-pointer hover:border-blue-400 transition-all select-none flex items-start gap-3';
             div.onclick = () => selectDoctor(div, doc.id, doc.name);

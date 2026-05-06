@@ -32,7 +32,7 @@ if (!$doc) {
 // Strip existing title/gelar for clean display
 $cleanName = $doc['name'];
 $cleanName = preg_replace('/^(dr\.|drg\.)\s*/i', '', $cleanName);
-$cleanName = preg_replace('/,\s*Sp\.[a-zA-Z]+$/i', '', $cleanName);
+$cleanName = preg_replace('/(,\s*)?Sp\.[a-zA-Z]+$/i', '', $cleanName);
 $doc['clean_name'] = $cleanName;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $prefix = $specTitles[$specialization][0];
         $suffix = $specTitles[$specialization][1];
         $name = preg_replace('/^(dr\.|drg\.)\s*/i', '', $name);
-        $name = preg_replace('/,\s*Sp\.[a-zA-Z]+$/i', '', $name);
+        $name = preg_replace('/(,\s*)?Sp\.[a-zA-Z]+$/i', '', $name);
         $name = $prefix . $name . $suffix;
     }
 
@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Update clean name for repopulation
     $cleanName = $doc['name'];
     $cleanName = preg_replace('/^(dr\.|drg\.)\s*/i', '', $cleanName);
-    $cleanName = preg_replace('/,\s*Sp\.[a-zA-Z]+$/i', '', $cleanName);
+    $cleanName = preg_replace('/(,\s*)?Sp\.[a-zA-Z]+$/i', '', $cleanName);
     $doc['clean_name'] = $cleanName;
 }
 ?>

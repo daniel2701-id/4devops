@@ -15,6 +15,10 @@ if (!$apptId) {
     exit;
 }
 
+try {
+    $pdo->exec("ALTER TABLE patient_profiles ADD COLUMN age INT NULL AFTER birth_date");
+} catch (Exception $e) {}
+
 // ---- PDF Download ----
 if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
     $stmt = $pdo->prepare(
@@ -40,8 +44,11 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
 
     // Generate clean HTML for print/PDF
     $ageYears = '-';
-    if (!empty($apptData['birth_date'])) {
-        $ageYears = date_diff(date_create($apptData['birth_date']), date_create('now'))->y . ' Tahun';
+    if (!empty($apptData['birth_date']) && $apptData['birth_date'] !== '0000-00-00') {
+        $dt = date_create($apptData['birth_date']);
+        if ($dt) {
+            $ageYears = date_diff($dt, date_create('now'))->y . ' Tahun';
+        }
     } elseif (!empty($apptData['age'])) {
         $ageYears = $apptData['age'] . ' Tahun';
     }
@@ -226,8 +233,11 @@ $record = $stmt2->fetch() ?: [];
 
 
 $ageDisplay = '-';
-if (!empty($appt['birth_date'])) {
-    $ageDisplay = date_diff(date_create($appt['birth_date']), date_create('now'))->y . ' Tahun';
+if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
+    $dt = date_create($appt['birth_date']);
+    if ($dt) {
+        $ageDisplay = date_diff($dt, date_create('now'))->y . ' Tahun';
+    }
 } elseif (!empty($appt['age'])) {
     $ageDisplay = $appt['age'] . ' Tahun';
 }

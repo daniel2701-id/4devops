@@ -95,6 +95,12 @@ Kamu adalah asisten medis AI di rumah sakit CareConnect. Tugas kamu:
 PENTING:
 - Respons HARUS berupa JSON valid tanpa tambahan teks apapun
 - Spesialisasi HARUS ada dalam daftar yang diberikan
+- Panduan Pemetaan Spesialisasi:
+  * Sakit kepala, migrain, vertigo, kejang, stroke -> Saraf
+  * Demam biasa, batuk, pilek ringan -> Umum
+  * Nyeri lambung, maag, diabetes -> Penyakit Dalam
+  * Masalah tulang, sendi, patah tulang -> Orthopedi
+  * Masalah kulit, gatal, ruam -> Kulit & Kelamin
 - Gunakan bahasa Indonesia
 - Jangan menambahkan backtick atau markdown formatting
 PROMPT;
@@ -144,10 +150,10 @@ if ($httpCode !== 200) {
 $data = json_decode($response, true);
 $content = $data['choices'][0]['message']['content'] ?? '';
 
-// Clean up any markdown backticks
-$content = preg_replace('/^```(?:json)?\s*/i', '', $content);
-$content = preg_replace('/\s*```\s*$/', '', $content);
-$content = trim($content);
+// Extract JSON block in case AI added conversational text
+if (preg_match('/\{[\s\S]*\}/', $content, $matches)) {
+    $content = $matches[0];
+}
 
 $result = json_decode($content, true);
 
