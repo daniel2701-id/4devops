@@ -449,7 +449,6 @@ function loadDoctorsForSpec(spec) {
             `;
             container.appendChild(div);
         });
-    }
 }
 
 function selectDoctor(el, docId, docName) {
