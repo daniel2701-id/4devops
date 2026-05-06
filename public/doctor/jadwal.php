@@ -80,9 +80,10 @@ $success = flash('success');
     <nav class="flex-1 p-4 space-y-1">
       <?php
       $navItems = [
-        ['icon'=>'home',             'label'=>'Beranda',    'href'=>'dashboard.php',   'active'=>false],
-        ['icon'=>'calendar_month',   'label'=>'Jadwal',     'href'=>'jadwal.php',      'active'=>true],
-        ['icon'=>'chat',             'label'=>'Chat',       'href'=>'chat.php',        'active'=>false],
+        ['icon'=>'home',           'label'=>'Beranda',       'href'=>'dashboard.php',   'active'=>false],
+        ['icon'=>'calendar_month', 'label'=>'Jadwal Pasien','href'=>'jadwal.php',      'active'=>true],
+        ['icon'=>'edit_calendar',  'label'=>'Atur Jadwal',  'href'=>'atur_jadwal.php', 'active'=>false],
+        ['icon'=>'chat',           'label'=>'Chat',         'href'=>'chat.php',        'active'=>false],
       ];
       foreach ($navItems as $item):
         $cls = $item['active']
@@ -109,15 +110,20 @@ $success = flash('success');
   <main class="flex-1 overflow-auto p-6 lg:p-8">
     <div class="flex items-center justify-between mb-8">
       <div>
-        <h1 class="text-2xl font-black text-slate-900">Manajemen Jadwal</h1>
+        <h1 class="text-2xl font-black text-slate-900">Jadwal Pasien</h1>
         <p class="text-slate-500 font-medium mt-1">Kelola sesi konsultasi Anda hari ini.</p>
       </div>
-      
+      <div class="flex items-center gap-3">
+        <a href="atur_jadwal.php" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 shadow-sm transition-all">
+          <span class="material-symbols-outlined text-[18px]">edit_calendar</span>
+          Atur Jadwal Praktik
+        </a>
       <!-- Date Picker Form -->
       <form method="GET" class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
         <input type="date" name="date" value="<?= e($dateFilter) ?>" class="bg-transparent text-sm font-bold text-slate-700 outline-none px-3 py-1">
         <button type="submit" class="bg-primary text-white rounded-lg px-3 py-1.5 text-xs font-bold hover:bg-primary-light">Filter</button>
       </form>
+      </div>
     </div>
 
     <?= alert_html($success, 'success') ?>
