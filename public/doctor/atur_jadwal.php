@@ -5,8 +5,23 @@ require_role('doctor');
 $user = current_user();
 $pdo  = db();
 
-// ── Buat tabel doctor_schedule_dates jika belum ada ──────────────────────────
+// ── Buat tabel jika belum ada (menghindari error 500 jika schema_additions belum dijalankan) ──
 try {
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS doctor_schedules (
+            id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            doctor_id       BIGINT UNSIGNED NOT NULL,
+            day_of_week     TINYINT NOT NULL,
+            start_time      TIME NOT NULL,
+            end_time        TIME NOT NULL,
+            slot_duration   SMALLINT NOT NULL DEFAULT 30,
+            is_active       TINYINT(1) NOT NULL DEFAULT 1,
+            created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE CASCADE,
+            INDEX idx_doc_day (doctor_id, day_of_week)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS doctor_schedule_dates (
             id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -19,7 +34,8 @@ try {
             note          VARCHAR(255),
             created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY uq_doc_date (doctor_id, schedule_date),
-            INDEX idx_doc_sdate (doctor_id, schedule_date)
+            INDEX idx_doc_sdate (doctor_id, schedule_date),
+            FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
 } catch (Exception $e) {
@@ -62,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st       = $_POST['spec_start']    ?? '08:00';
         $en       = $_POST['spec_end']      ?? '17:00';
         $dur      = max(10, min(240, (int)($_POST['spec_duration'] ?? 30)));
-        $note     = mb_substr(trim($_POST['note'] ?? ''), 0, 255);
+        $note     = substr(trim($_POST['note'] ?? ''), 0, 255);
 
         if (empty($date)) {
             flash('error', 'Tanggal tidak boleh kosong.');
