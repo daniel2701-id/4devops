@@ -5,33 +5,15 @@ require_role('doctor');
 $user = current_user();
 $pdo  = db();
 
-// Handle Status Change
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['appt_id'], $_POST['status'])) {
-    csrf_abort();
-    $apptId = (int) $_POST['appt_id'];
-    $status = in_array($_POST['status'], ['waiting', 'in_session', 'finished', 'cancelled'])
-        ? $_POST['status'] : 'waiting';
 
-    $stmt = $pdo->prepare(
-        "UPDATE appointments SET status = ? WHERE id = ? AND doctor_id = ? AND status NOT IN ('finished','cancelled')"
-    );
-    $stmt->execute([$status, $apptId, $user['id']]);
-
-    if ($stmt->rowCount() > 0) {
-        flash('success', 'Status jadwal berhasil diperbarui.');
-    } else {
-        flash('error', 'Status jadwal ini sudah terkunci dan tidak bisa diubah lagi.');
-    }
-    header('Location: jadwal.php'); exit;
-}
 
 $stmt = $pdo->prepare(
     "SELECT a.*, p.name AS patient_name, pp.gender, pp.phone
      FROM appointments a
      JOIN users p ON p.id = a.patient_id
      LEFT JOIN patient_profiles pp ON pp.user_id = p.id
-     WHERE a.doctor_id = ? AND a.status IN ('waiting', 'in_session')
-     ORDER BY a.scheduled_at ASC"
+     WHERE a.doctor_id = ? AND a.status = 'finished'
+     ORDER BY a.scheduled_at DESC"
 );
 $stmt->execute([$user['id']]);
 $appointments = $stmt->fetchAll();
@@ -44,7 +26,7 @@ $msgError   = flash('error');
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CareConnect – Jadwal Pasien</title>
+<title>CareConnect – Riwayat Pasien</title>
 <?= tailwind_cdn() ?>
 <?= tailwind_config() ?>
 <?= google_fonts() ?>
@@ -81,8 +63,8 @@ $msgError   = flash('error');
       <?php
       $navItems = [
         ['icon'=>'home',          'label'=>'Beranda',       'href'=>'dashboard.php',   'active'=>false],
-        ['icon'=>'calendar_month','label'=>'Jadwal Pasien', 'href'=>'jadwal.php',      'active'=>true],
-        ['icon'=>'history',       'label'=>'Riwayat',       'href'=>'riwayat.php',     'active'=>false],
+        ['icon'=>'calendar_month','label'=>'Jadwal Pasien', 'href'=>'jadwal.php',      'active'=>false],
+        ['icon'=>'history',       'label'=>'Riwayat',       'href'=>'riwayat.php',     'active'=>true],
         ['icon'=>'edit_calendar', 'label'=>'Atur Jadwal',   'href'=>'atur_jadwal.php', 'active'=>false],
         ['icon'=>'chat',          'label'=>'Chat',          'href'=>'chat.php',        'active'=>false],
       ];
@@ -112,8 +94,8 @@ $msgError   = flash('error');
 
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-2xl font-black text-slate-900">Jadwal Pasien</h1>
-      <p class="text-slate-500 font-medium mt-1">Kelola semua sesi konsultasi yang menunggu atau sedang berjalan.</p>
+      <h1 class="text-2xl font-black text-slate-900">Riwayat Pasien</h1>
+      <p class="text-slate-500 font-medium mt-1">Daftar sesi konsultasi yang telah selesai.</p>
     </div>
 
     <?= alert_html($msgError, 'error') ?>
@@ -123,7 +105,7 @@ $msgError   = flash('error');
       <?php if (empty($appointments)): ?>
       <div class="p-12 text-center text-slate-400">
         <span class="material-symbols-outlined text-[48px] text-slate-300">event_busy</span>
-        <p class="font-medium mt-3">Tidak ada jadwal pasien saat ini.</p>
+        <p class="font-medium mt-3">Tidak ada riwayat pasien saat ini.</p>
       </div>
       <?php else: ?>
       <div class="overflow-x-auto">

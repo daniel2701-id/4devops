@@ -121,9 +121,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <style>
 body { font-family: 'Inter', sans-serif; }
 .slot-btn { transition: all .15s ease; }
-.slot-btn.available { @apply cursor-pointer bg-white border-slate-200 text-slate-700 hover:border-blue-500 hover:bg-blue-50; }
-.slot-btn.booked { @apply opacity-40 cursor-not-allowed bg-slate-50 border-slate-100 text-slate-400; }
-.slot-btn.selected { @apply bg-blue-600 text-white border-blue-600 shadow-md; }
+.slot-btn.available { @apply cursor-pointer bg-white border-slate-200 text-slate-700 hover:border-blue-600 hover:bg-blue-600 hover:text-white; }
+.slot-btn.booked { @apply hidden; }
+.slot-btn.selected { @apply bg-blue-600 text-white border-blue-600 shadow-md hover:bg-blue-700 hover:border-blue-700; }
 .doctor-card.selected { @apply border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/20; }
 .step-container { display: none; }
 .step-container.active { display: block; animation: fadeIn 0.3s ease-out; }
@@ -520,17 +520,14 @@ function renderSchedule(days) {
         slotsGrid.className = 'p-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2';
         
         day.slots.forEach(slot => {
+            if (!slot.available) return; // Do not show booked slots
+            
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.textContent = slot.time;
             
-            if (slot.available) {
-                btn.className = 'slot-btn available text-sm font-bold py-2 rounded-lg border-2 text-center';
-                btn.onclick = () => selectSlot(btn, day.date, slot.time, day.day_name + ', ' + day.day_num + ' ' + day.month);
-            } else {
-                btn.className = 'slot-btn booked text-sm font-bold py-2 rounded-lg border-2 text-center';
-                btn.disabled = true;
-            }
+            btn.className = 'slot-btn available text-sm font-bold py-2 rounded-lg border-2 text-center transition-colors shadow-sm hover:shadow';
+            btn.onclick = () => selectSlot(btn, day.date, slot.time, day.day_name + ', ' + day.day_num + ' ' + day.month);
             
             slotsGrid.appendChild(btn);
         });
