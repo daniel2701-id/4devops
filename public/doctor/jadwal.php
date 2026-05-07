@@ -120,11 +120,6 @@ $msgError   = flash('error');
         <p class="text-slate-500 font-medium mt-1">Kelola sesi konsultasi Anda hari ini.</p>
       </div>
       <div class="flex items-center gap-3">
-        <a href="atur_jadwal.php"
-           class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 shadow-sm transition-all">
-          <span class="material-symbols-outlined text-[18px]">edit_calendar</span>
-          Atur Jadwal Praktik
-        </a>
         <form method="GET" class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
           <input type="date" name="date" value="<?= e($dateFilter) ?>"
                  class="bg-transparent text-sm font-bold text-slate-700 outline-none px-3 py-1">
