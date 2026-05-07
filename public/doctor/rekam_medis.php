@@ -46,9 +46,7 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
     $ageYears = '-';
     if (!empty($apptData['birth_date']) && $apptData['birth_date'] !== '0000-00-00') {
         $dt = date_create($apptData['birth_date']);
-        if ($dt) {
-            $ageYears = date_diff($dt, date_create('now'))->y . ' Tahun';
-        }
+        if ($dt) { $ageYears = date_diff($dt, date_create('now'))->y . ' Tahun'; }
     } elseif (!empty($apptData['age'])) {
         $ageYears = $apptData['age'] . ' Tahun';
     }
@@ -63,86 +61,85 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
     $fileDate = date("Y-m-d", strtotime($apptData['scheduled_at']));
     $pdfFilename = "Resep_{$cleanName}_{$fileDate}.pdf";
 
-    header('Content-Type: text/html; charset=UTF-8');
-    echo <<<HTML
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<title>Resep – {$apptData['patient_name']}</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Times New Roman', serif; font-size: 13px; color: #111; background: #fff; padding: 30px; }
-  .letterhead { border-bottom: 3px double #1e40af; padding-bottom: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; }
-  .clinic-name { font-size: 22px; font-weight: 900; color: #1e40af; letter-spacing: -0.5px; }
-  .clinic-sub { font-size: 11px; color: #64748b; }
-  .doctor-info { font-size: 12px; color: #374151; line-height: 1.6; }
-  .rx-title { font-size: 48px; color: #1e40af; font-style: italic; font-weight: 900; float: left; line-height: 1; margin-right: 8px; }
-  .patient-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; }
-  .patient-box table { width: 100%; }
-  .patient-box td { padding: 2px 8px 2px 0; font-size: 12px; vertical-align: top; }
-  .patient-box td:first-child { font-weight: 700; color: #374151; width: 120px; }
-  .section { margin-bottom: 16px; }
-  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 700; margin-bottom: 4px; }
-  .section-body { background: #f8fafc; border-left: 3px solid #2563eb; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 13px; line-height: 1.8; }
-  .prescription-body { background: #fefce8; border-left: 3px solid #d97706; }
-  .footer { margin-top: 40px; display: flex; justify-content: flex-end; }
-  .sig-box { text-align: center; }
-  .sig-line { margin-top: 60px; border-top: 1px solid #374151; padding-top: 6px; font-size: 12px; }
-  .date-stamp { font-size: 11px; color: #6b7280; }
-</style>
-</head>
-<body id="pdf-content">
-<div class="letterhead">
-  <div>
-    <div class="clinic-name">&#9829; CareConnect</div>
-    <div class="clinic-sub">Platform Kesehatan Digital &bull; careconnect.id</div>
-  </div>
-  <div style="margin-left:auto;text-align:right;" class="doctor-info">
-    <strong>{$apptData['doctor_name']}</strong><br>
-    {$apptData['specialization']}<br>
-    STR: {$apptData['license_number']}
-  </div>
-</div>
+    $rawHtml = <<<HTML
+<div id="pdf-export-wrap" style="width: 800px; padding: 40px; font-family: 'Times New Roman', serif; color: #000; background: #fff; box-sizing: border-box;">
+  <style>
+    .pdf-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
+    .pdf-head { border-bottom: 3px double #1e40af; padding-bottom: 14px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+    .pdf-clinic-name { font-size: 24px; font-weight: 900; color: #1e40af; }
+    .pdf-clinic-sub { font-size: 12px; color: #64748b; }
+    .pdf-doc-info { font-size: 12px; color: #374151; text-align: right; line-height: 1.5; }
+    .pdf-patient { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; }
+    .pdf-patient table { width: 100%; border-collapse: collapse; }
+    .pdf-patient td { padding: 4px; font-size: 13px; vertical-align: top; }
+    .pdf-patient td:nth-child(odd) { font-weight: bold; width: 120px; color: #374151; }
+    .pdf-sec { margin-bottom: 20px; }
+    .pdf-sec-title { font-size: 12px; text-transform: uppercase; color: #6b7280; font-weight: bold; margin-bottom: 4px; }
+    .pdf-sec-body { background: #f8fafc; border-left: 3px solid #2563eb; padding: 12px 16px; font-size: 14px; line-height: 1.6; }
+    .pdf-rx-body { background: #fefce8; border-left: 3px solid #d97706; }
+    .pdf-footer { margin-top: 50px; text-align: right; }
+    .pdf-sig { display: inline-block; text-align: center; }
+    .pdf-sig-line { margin-top: 60px; border-top: 1px solid #000; padding-top: 4px; font-size: 13px; font-weight: bold; }
+  </style>
+  
+  <div class="pdf-wrap">
+      <div class="pdf-head">
+        <div>
+          <div class="pdf-clinic-name">&#9829; CareConnect</div>
+          <div class="pdf-clinic-sub">Platform Kesehatan Digital &bull; careconnect.id</div>
+        </div>
+        <div class="pdf-doc-info">
+          <strong>{$apptData['doctor_name']}</strong><br>
+          {$apptData['specialization']}<br>
+          STR: {$apptData['license_number']}
+        </div>
+      </div>
 
-<div class="patient-box">
-  <table>
-    <tr><td>Nama Pasien</td><td>: <strong>{$apptData['patient_name']}</strong></td>
-        <td>NIK</td><td>: {$apptData['nik']}</td></tr>
-    <tr><td>Tanggal Lahir</td><td>: {$apptData['birth_date']} ({$ageYears})</td>
-        <td>Gol. Darah</td><td>: {$apptData['blood_type']}</td></tr>
-    <tr><td>Jenis Kelamin</td><td>: {$apptData['gender']}</td>
-        <td>Tanggal Periksa</td><td>: {$scheduledDate}</td></tr>
-  </table>
-</div>
+      <div class="pdf-patient">
+        <table>
+          <tr><td>Nama Pasien</td><td>: {$apptData['patient_name']}</td>
+              <td>NIK</td><td>: {$apptData['nik']}</td></tr>
+          <tr><td>Tanggal Lahir</td><td>: {$apptData['birth_date']} ({$ageYears})</td>
+              <td>Gol. Darah</td><td>: {$apptData['blood_type']}</td></tr>
+          <tr><td>Jenis Kelamin</td><td>: {$apptData['gender']}</td>
+              <td>Tgl Periksa</td><td>: {$scheduledDate}</td></tr>
+        </table>
+      </div>
 
-<div class="section">
-  <div class="section-label">Diagnosis</div>
-  <div class="section-body">{$diagnosisHtml}</div>
-</div>
+      <div class="pdf-sec">
+        <div class="pdf-sec-title">Diagnosis</div>
+        <div class="pdf-sec-body">{$diagnosisHtml}</div>
+      </div>
 
-<div class="section">
-  <div class="section-label">Tindakan / Perawatan</div>
-  <div class="section-body">{$treatmentHtml}</div>
-</div>
+      <div class="pdf-sec">
+        <div class="pdf-sec-title">Tindakan / Perawatan</div>
+        <div class="pdf-sec-body">{$treatmentHtml}</div>
+      </div>
 
-<div class="section">
-  <div class="section-label">&#82;&#120; &nbsp; Resep Elektronik</div>
-  <div class="section-body prescription-body">{$prescLines}</div>
-</div>
+      <div class="pdf-sec">
+        <div class="pdf-sec-title" style="font-size:16px; color:#d97706;">&#82;&#120; Resep Elektronik</div>
+        <div class="pdf-sec-body pdf-rx-body" style="font-family: monospace; font-size: 14px;">{$prescLines}</div>
+      </div>
 
-<div class="footer">
-  <div class="sig-box">
-    <div class="date-stamp">Jakarta, {$todayDate}</div>
-    <div class="sig-line">{$apptData['doctor_name']}<br><span style='font-size:10px;color:#64748b'>{$apptData['specialization']}</span></div>
+      <div class="pdf-footer">
+        <div class="pdf-sig">
+          <div style="font-size:12px; color:#6b7280; margin-bottom: 40px;">Jakarta, {$todayDate}</div>
+          <div class="pdf-sig-line">
+            {$apptData['doctor_name']}<br>
+            <span style="font-weight:normal; font-size:11px; color:#64748b;">{$apptData['specialization']}</span>
+          </div>
+        </div>
+      </div>
   </div>
 </div>
-<script>
-    window.pdfFilename = '{$pdfFilename}';
-</script>
-</body>
-</html>
 HTML;
+
+    if (isset($_GET['raw'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['html' => $rawHtml, 'filename' => $pdfFilename]);
+    } else {
+        echo "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Resep</title></head><body>" . $rawHtml . "</body></html>";
+    }
     exit;
 }
 
@@ -403,42 +400,42 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
       btnElement.classList.add('opacity-75', 'pointer-events-none');
       
       fetch(`rekam_medis.php?appt_id=${apptId}&pdf=1&raw=1`)
-          .then(res => res.text())
-          .then(html => {
-              // Create a hidden iframe to hold the document
-              const iframe = document.createElement('iframe');
-              iframe.style.position = 'absolute';
-              iframe.style.width = '800px';
-              iframe.style.height = '1000px';
-              iframe.style.left = '-9999px';
-              document.body.appendChild(iframe);
+          .then(res => res.json())
+          .then(data => {
+              // Buat div tersembunyi di dokumen saat ini
+              const hiddenDiv = document.createElement('div');
+              hiddenDiv.innerHTML = data.html;
+              hiddenDiv.style.position = 'absolute';
+              hiddenDiv.style.left = '-9999px';
+              hiddenDiv.style.top = '0';
+              document.body.appendChild(hiddenDiv);
               
-              const doc = iframe.contentWindow.document;
-              doc.open();
-              doc.write(html);
-              doc.close();
+              const element = hiddenDiv.querySelector('#pdf-export-wrap');
               
-              setTimeout(() => {
-                  const element = doc.getElementById('pdf-content');
-                  const filename = iframe.contentWindow.pdfFilename || 'Resep.pdf';
-                  
-                  const opt = {
-                      margin:       0.5,
-                      filename:     filename,
-                      image:        { type: 'jpeg', quality: 0.98 },
-                      html2canvas:  { scale: 2 },
-                      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-                  };
-                  
-                  html2pdf().set(opt).from(element).save().then(() => {
-                      document.body.removeChild(iframe);
-                      btnElement.innerHTML = originalText;
-                      btnElement.classList.remove('opacity-75', 'pointer-events-none');
-                  });
-              }, 500); // Give iframe 500ms to parse/render HTML completely
+              const opt = {
+                  margin:       0.5,
+                  filename:     data.filename,
+                  image:        { type: 'jpeg', quality: 0.98 },
+                  html2canvas:  { scale: 2, useCORS: true },
+                  jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+              };
+              
+              html2pdf().set(opt).from(element).save().then(() => {
+                  // Bersihkan setelah berhasil
+                  document.body.removeChild(hiddenDiv);
+                  btnElement.innerHTML = originalText;
+                  btnElement.classList.remove('opacity-75', 'pointer-events-none');
+              }).catch(err => {
+                  console.error('PDF generation error:', err);
+                  alert('Gagal membuat PDF. Coba gunakan browser lain (Chrome/Edge).');
+                  document.body.removeChild(hiddenDiv);
+                  btnElement.innerHTML = originalText;
+                  btnElement.classList.remove('opacity-75', 'pointer-events-none');
+              });
           })
           .catch(err => {
-              alert('Gagal memuat resep. Silakan coba lagi.');
+              console.error('Fetch error:', err);
+              alert('Gagal mengambil data resep dari server.');
               btnElement.innerHTML = originalText;
               btnElement.classList.remove('opacity-75', 'pointer-events-none');
           });
