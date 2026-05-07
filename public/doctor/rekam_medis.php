@@ -90,7 +90,7 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
   .sig-box { text-align: center; }
   .sig-line { margin-top: 60px; border-top: 1px solid #374151; padding-top: 6px; font-size: 12px; }
   .date-stamp { font-size: 11px; color: #6b7280; }
-  @media print { body { padding: 15px; } }
+  @media print { body { padding: 15px; } .no-print { display: none !important; } }
 </style>
 </head>
 <body>
@@ -139,22 +139,22 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
   </div>
 </div>
 
+<div id="print-controls" style="text-align:center; padding: 10px; background: #fef3c7; color: #b45309; font-weight: bold; border-bottom: 1px solid #fde68a; margin-bottom: 20px;" class="no-print">
+  Resep sedang diunduh otomatis. Jika unduhan tidak berjalan, <a href="#" onclick="window.print();return false;" style="color:#d97706;text-decoration:underline;">klik di sini untuk Mencetak/Menyimpan PDF secara manual</a>.
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 window.addEventListener('load', () => {
-    const element = document.body;
+    // Hide print controls from the PDF
+    const controls = document.getElementById('print-controls');
     const opt = {
       margin:       0.5,
       filename:     '{$pdfFilename}',
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2 },
+      html2canvas:  { scale: 2, ignoreElements: (el) => el.id === 'print-controls' },
       jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().set(opt).from(element).save().then(() => {
-        setTimeout(() => {
-            window.close(); // Tutup tab otomatis setelah mengunduh
-        }, 1000);
-    });
+    html2pdf().set(opt).from(document.body).save();
 });
 </script>
 </body>
