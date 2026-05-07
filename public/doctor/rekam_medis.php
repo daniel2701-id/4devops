@@ -135,6 +135,7 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
 HTML;
 
     if (isset($_GET['raw'])) {
+        error_reporting(0);
         if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
         echo json_encode(['html' => $rawHtml, 'filename' => $pdfFilename]);
@@ -396,6 +397,10 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
   function downloadPdfInBackground(btnElement, apptId) {
+      if (typeof html2pdf === 'undefined') {
+          alert('Komponen PDF belum selesai dimuat atau terblokir. Harap tunggu sebentar atau periksa koneksi internet Anda.');
+          return;
+      }
       const originalText = btnElement.innerHTML;
       btnElement.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> <span class="btn-text">Memproses...</span>';
       btnElement.classList.add('opacity-75', 'pointer-events-none');
@@ -407,7 +412,7 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
                   return JSON.parse(text);
               } catch (e) {
                   console.error('Invalid JSON response from server:', text);
-                  throw new Error('Invalid JSON response');
+                  throw new Error('Bukan JSON valid. Server merespons: ' + text.substring(0, 80));
               }
           })
           .then(data => {
