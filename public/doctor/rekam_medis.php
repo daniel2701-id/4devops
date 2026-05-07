@@ -135,7 +135,7 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
 HTML;
 
     if (isset($_GET['raw'])) {
-        ob_clean();
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
         echo json_encode(['html' => $rawHtml, 'filename' => $pdfFilename]);
     } else {
@@ -444,7 +444,7 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
           })
           .catch(err => {
               console.error('Fetch error:', err);
-              alert('Gagal mengambil data resep dari server.');
+              alert('Terjadi kesalahan: ' + err.message);
               btnElement.innerHTML = originalText;
               btnElement.classList.remove('opacity-75', 'pointer-events-none');
           });
