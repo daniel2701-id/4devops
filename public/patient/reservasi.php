@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $aiDiagnosis = $_POST['ai_diagnosis'] ?? '';
     $aiSpec      = $_POST['ai_spec'] ?? '';
     
-    $reason = "Gejala: " . sanitize_string($symptomsRaw, 500) . "\nAnalisis AI: " . sanitize_string($aiDiagnosis, 500) . " (" . sanitize_string($aiSpec, 100) . ")";
+    $reason = "[INPUT MANUAL PASIEN]\n" . sanitize_string($symptomsRaw, 1000) . "\n\n[HASIL AI ANALYST]\nDiagnosis Awal: " . sanitize_string($aiDiagnosis, 1000) . "\nRekomendasi Spesialisasi: " . sanitize_string($aiSpec, 100);
     
     $gender      = $_POST['gender'] ?? '';
     $age         = (int) ($_POST['age'] ?? 0);
@@ -168,7 +168,18 @@ body { font-family: 'Inter', sans-serif; }
                     <span class="material-symbols-outlined text-blue-600 text-3xl">psychiatry</span>
                     Keluhan & Gejala
                 </h2>
-                <p class="text-slate-500 text-sm">Jelaskan keluhan medis Anda. Sistem AI kami akan menganalisis gejala Anda untuk merekomendasikan dokter spesialis yang tepat.</p>
+                <p class="text-slate-500 text-sm mb-4">
+                  Jelaskan keluhan medis yang Anda alami secara mendetail.
+                </p>
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+                  <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-blue-600 mt-0.5">smart_toy</span>
+                    <div>
+                      <strong class="font-bold block mb-1">Mengenal Fitur AI Analyst CareConnect</strong>
+                      <p>Asisten AI cerdas kami akan menganalisis gejala yang Anda inputkan untuk memberikan <strong>prakiraan diagnosis awal, tingkat urgensi, serta rekomendasi dokter spesialis yang paling relevan</strong>. Hasil analisis dan input keluhan Anda akan dikirimkan kepada dokter untuk membantu mereka memberikan diagnosis medis yang lebih akurat saat sesi konsultasi.</p>
+                    </div>
+                  </div>
+                </div>
             </div>
             
             <div class="space-y-4">

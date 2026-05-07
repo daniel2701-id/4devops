@@ -53,26 +53,26 @@ $msgError   = flash('error');
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex">
 
   <!-- Sidebar -->
-  <aside class="w-64 bg-blue-700 text-white flex-shrink-0 flex flex-col hidden md:flex shadow-xl">
-    <div class="p-6 border-b border-blue-600/50">
+  <aside class="w-64 bg-purple-700 text-white flex-shrink-0 flex flex-col hidden md:flex shadow-xl">
+    <div class="p-6 border-b border-purple-600/50">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 bg-white/20 flex items-center justify-center rounded-lg transform rotate-45">
           <span class="material-symbols-outlined text-white transform -rotate-45 text-[16px]" style="font-variation-settings:'FILL' 1;">medical_services</span>
         </div>
         <span class="font-extrabold tracking-tight text-white text-lg">CareConnect</span>
       </div>
-      <div class="mt-1 text-xs text-blue-200 font-medium ml-10">Medical Portal</div>
+      <div class="mt-1 text-xs text-purple-200 font-medium ml-10">Medical Portal</div>
     </div>
 
     <!-- Doctor info -->
-    <div class="p-4 border-b border-blue-600/50">
+    <div class="p-4 border-b border-purple-600/50">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 bg-white/20 text-white rounded-full flex items-center justify-center font-bold text-sm">
           <?= e(initials($user['name'])) ?>
         </div>
         <div>
           <p class="text-sm font-bold text-white"><?= e($user['name']) ?></p>
-          <p class="text-xs text-blue-200">Dokter</p>
+          <p class="text-xs text-purple-200">Dokter</p>
         </div>
       </div>
     </div>
@@ -89,7 +89,7 @@ $msgError   = flash('error');
       foreach ($navItems as $item):
         $cls = $item['active']
           ? 'bg-white/20 text-white font-bold shadow-sm'
-          : 'text-blue-100 hover:bg-white/10 hover:text-white font-medium';
+          : 'text-purple-100 hover:bg-white/10 hover:text-white font-medium';
       ?>
       <a href="<?= e($item['href']) ?>" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm <?= $cls ?>">
         <span class="material-symbols-outlined text-[20px]"><?= $item['icon'] ?></span>
@@ -98,9 +98,9 @@ $msgError   = flash('error');
       <?php endforeach; ?>
     </nav>
 
-    <div class="p-4 border-t border-blue-600/50">
+    <div class="p-4 border-t border-purple-600/50">
       <a href="<?= APP_URL ?>/doctor/logout.php"
-         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-blue-200 hover:bg-red-500/20 hover:text-red-200 transition-colors">
+         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-purple-200 hover:bg-red-500/20 hover:text-red-200 transition-colors">
         <span class="material-symbols-outlined text-[20px]">logout</span>
         Keluar
       </a>

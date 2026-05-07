@@ -244,26 +244,26 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex">
 
   <!-- Sidebar -->
-  <aside class="w-64 bg-blue-700 text-white flex-shrink-0 flex flex-col hidden md:flex shadow-xl">
-    <div class="p-6 border-b border-blue-600/50">
+  <aside class="w-64 bg-purple-700 text-white flex-shrink-0 flex flex-col hidden md:flex shadow-xl">
+    <div class="p-6 border-b border-purple-600/50">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 bg-white/20 flex items-center justify-center rounded-lg transform rotate-45">
           <span class="material-symbols-outlined text-white transform -rotate-45 text-[16px]" style="font-variation-settings:'FILL' 1;">medical_services</span>
         </div>
         <span class="font-extrabold tracking-tight text-white text-lg">CareConnect</span>
       </div>
-      <div class="mt-1 text-xs text-blue-200 font-medium ml-10">Medical Portal</div>
+      <div class="mt-1 text-xs text-purple-200 font-medium ml-10">Medical Portal</div>
     </div>
 
     <!-- Doctor info -->
-    <div class="p-4 border-b border-blue-600/50">
+    <div class="p-4 border-b border-purple-600/50">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 bg-white/20 text-white rounded-full flex items-center justify-center font-bold text-sm">
           <?= e(initials($user['name'])) ?>
         </div>
         <div>
           <p class="text-sm font-bold text-white"><?= e($user['name']) ?></p>
-          <p class="text-xs text-blue-200">Dokter</p>
+          <p class="text-xs text-purple-200">Dokter</p>
         </div>
       </div>
     </div>
@@ -280,7 +280,7 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
       foreach ($navItems as $item):
         $cls = $item['active']
           ? 'bg-white/20 text-white font-bold shadow-sm'
-          : 'text-blue-100 hover:bg-white/10 hover:text-white font-medium';
+          : 'text-purple-100 hover:bg-white/10 hover:text-white font-medium';
       ?>
       <a href="<?= e($item['href']) ?>" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm <?= $cls ?>">
         <span class="material-symbols-outlined text-[20px]"><?= $item['icon'] ?></span>
@@ -289,9 +289,9 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
       <?php endforeach; ?>
     </nav>
 
-    <div class="p-4 border-t border-blue-600/50">
+    <div class="p-4 border-t border-purple-600/50">
       <a href="<?= APP_URL ?>/doctor/logout.php"
-         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-blue-200 hover:bg-red-500/20 hover:text-red-200 transition-colors">
+         class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-purple-200 hover:bg-red-500/20 hover:text-red-200 transition-colors">
         <span class="material-symbols-outlined text-[20px]">logout</span>Keluar
       </a>
     </div>
@@ -345,10 +345,10 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
         </div>
 
         <div class="bg-primary-fixed border border-primary/20 rounded-2xl p-6 shadow-sm">
-          <h3 class="text-xs font-bold text-primary uppercase tracking-wider mb-2">Alasan Kunjungan</h3>
-          <p class="text-sm text-slate-700 font-medium leading-relaxed">
-            "<?= e($appt['reason'] ?: 'Tidak ada keluhan spesifik.') ?>"
-          </p>
+          <h3 class="text-xs font-bold text-primary uppercase tracking-wider mb-3">Keluhan & Hasil Analisis AI</h3>
+          <div class="text-sm text-slate-700 font-medium leading-relaxed whitespace-pre-wrap bg-white/50 p-4 rounded-xl border border-primary/10">
+<?= e($appt['reason'] ?: 'Tidak ada keluhan spesifik.') ?>
+          </div>
           <div class="mt-4 pt-4 border-t border-primary/10 flex justify-between items-center text-xs font-medium text-primary">
             <span><?= format_date($appt['scheduled_at'], 'd M Y') ?></span>
             <span><?= date('H:i', strtotime($appt['scheduled_at'])) ?> WIB</span>
