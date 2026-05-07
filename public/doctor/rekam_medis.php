@@ -150,7 +150,11 @@ window.addEventListener('load', () => {
       html2canvas:  { scale: 2 },
       jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().set(opt).from(element).save();
+    html2pdf().set(opt).from(element).save().then(() => {
+        setTimeout(() => {
+            window.close(); // Tutup tab otomatis setelah mengunduh
+        }, 1000);
+    });
 });
 </script>
 </body>
@@ -309,10 +313,8 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
         <h1 class="text-2xl font-black text-slate-900">Catatan Rekam Medis</h1>
         <p class="text-slate-500 font-medium mt-1">Dokumentasi klinis &amp; resep elektronik.</p>
       </div>
-      <iframe name="pdfFrame" id="pdfFrame" style="position:absolute; left:-9999px; top:-9999px; width:800px; height:1200px; border:none;"></iframe>
       <?php if (!empty($record)): ?>
-      <a href="javascript:void(0)"
-         onclick="const btn=this; btn.innerHTML='<span class=\'material-symbols-outlined text-[18px] animate-spin\'>sync</span> Memproses...'; btn.classList.add('opacity-75','pointer-events-none'); document.getElementById('pdfFrame').src='rekam_medis.php?appt_id=<?= $apptId ?>&pdf=1'; setTimeout(()=>{btn.innerHTML='<span class=\'material-symbols-outlined text-[18px]\'>picture_as_pdf</span> Unduh Resep PDF'; btn.classList.remove('opacity-75','pointer-events-none');}, 3000);"
+      <a href="rekam_medis.php?appt_id=<?= $apptId ?>&pdf=1" target="_blank"
          class="ml-auto inline-flex items-center gap-2 bg-emerald-600 text-white font-bold px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition-colors text-sm shadow-md">
         <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
         Unduh Resep PDF
