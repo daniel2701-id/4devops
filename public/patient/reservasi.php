@@ -48,8 +48,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $symptomsRaw = $_POST['symptoms_raw'] ?? '';
     $aiDiagnosis = $_POST['ai_diagnosis'] ?? '';
     $aiSpec      = $_POST['ai_spec'] ?? '';
+    $aiDesc      = $_POST['ai_desc'] ?? '';
+    $aiUrgency   = $_POST['ai_urgency'] ?? '';
+    $aiAdvice    = $_POST['ai_advice'] ?? '';
     
-    $reason = "[INPUT MANUAL PASIEN]\n" . sanitize_string($symptomsRaw, 1000) . "\n\n[HASIL AI ANALYST]\nDiagnosis Awal: " . sanitize_string($aiDiagnosis, 1000) . "\nRekomendasi Spesialisasi: " . sanitize_string($aiSpec, 100);
+    $urgencyMap = [
+        'low' => 'Rendah',
+        'medium' => 'Sedang',
+        'high' => 'Tinggi'
+    ];
+    $urgencyId = $urgencyMap[strtolower($aiUrgency)] ?? $aiUrgency;
+    
+    $reason = "[INPUT PASIEN]\n" . sanitize_string($symptomsRaw, 1000) . 
+              "\n\n[HASIL AI ANALYST]\n" .
+              "Diagnosis Awal: " . sanitize_string($aiDiagnosis, 1000) . "\n" .
+              "Deskripsi: " . sanitize_string($aiDesc, 1000) . "\n" .
+              "Tingkat Urgensi: " . sanitize_string($urgencyId, 50) . "\n" .
+              "Saran Tindakan: " . sanitize_string($aiAdvice, 1000) . "\n" .
+              "Rekomendasi Spesialisasi: " . sanitize_string($aiSpec, 100);
     
     $gender      = $_POST['gender'] ?? '';
     $age         = (int) ($_POST['age'] ?? 0);
@@ -121,9 +137,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <style>
 body { font-family: 'Inter', sans-serif; }
 .slot-btn { transition: all .15s ease; }
-.slot-btn.available { @apply cursor-pointer bg-white border-slate-200 text-slate-700 hover:border-blue-600 hover:bg-blue-600 hover:text-white; }
-.slot-btn.booked { @apply hidden; }
-.slot-btn.selected { @apply bg-blue-600 text-white border-blue-600 shadow-md hover:bg-blue-700 hover:border-blue-700; }
+.slot-btn.available { 
+    cursor: pointer; 
+    background-color: white; 
+    border-color: #e2e8f0; 
+    color: #334155; 
+}
+.slot-btn.available:hover { 
+    background-color: #2563eb; 
+    border-color: #2563eb; 
+    color: white; 
+}
+.slot-btn.booked { 
+    display: none !important; 
+}
+.slot-btn.selected { 
+    background-color: #2563eb !important; 
+    color: white !important; 
+    border-color: #2563eb !important; 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important; 
+}
+.slot-btn.selected:hover {
+    background-color: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+}
 .doctor-card.selected { @apply border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/20; }
 .step-container { display: none; }
 .step-container.active { display: block; animation: fadeIn 0.3s ease-out; }
@@ -160,6 +197,9 @@ body { font-family: 'Inter', sans-serif; }
           <input type="hidden" name="symptoms_raw" id="symptoms_raw_input">
           <input type="hidden" name="ai_diagnosis" id="ai_diagnosis_input">
           <input type="hidden" name="ai_spec" id="ai_spec_input">
+          <input type="hidden" name="ai_desc" id="ai_desc_input">
+          <input type="hidden" name="ai_urgency" id="ai_urgency_input">
+          <input type="hidden" name="ai_advice" id="ai_advice_input">
 
           <!-- STEP 1: Gejala & Analisis -->
           <div id="step-1" class="step-container active">
@@ -389,6 +429,9 @@ async function analyzeSymptoms() {
             document.getElementById('symptoms_raw_input').value = sympInput;
             document.getElementById('ai_diagnosis_input').value = data.disease;
             document.getElementById('ai_spec_input').value = data.specialization;
+            document.getElementById('ai_desc_input').value = data.description;
+            document.getElementById('ai_urgency_input').value = data.urgency;
+            document.getElementById('ai_advice_input').value = data.advice;
             
             // Populate Step 2 UI
             document.getElementById('ai-disease-name').textContent = data.disease;
