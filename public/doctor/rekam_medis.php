@@ -135,6 +135,7 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
 HTML;
 
     if (isset($_GET['raw'])) {
+        ob_clean();
         header('Content-Type: application/json');
         echo json_encode(['html' => $rawHtml, 'filename' => $pdfFilename]);
     } else {
@@ -400,7 +401,15 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
       btnElement.classList.add('opacity-75', 'pointer-events-none');
       
       fetch(`rekam_medis.php?appt_id=${apptId}&pdf=1&raw=1`)
-          .then(res => res.json())
+          .then(async res => {
+              const text = await res.text();
+              try {
+                  return JSON.parse(text);
+              } catch (e) {
+                  console.error('Invalid JSON response from server:', text);
+                  throw new Error('Invalid JSON response');
+              }
+          })
           .then(data => {
               // Buat div tersembunyi di dokumen saat ini
               const hiddenDiv = document.createElement('div');
