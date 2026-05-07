@@ -141,7 +141,13 @@ $msgError   = flash('error');
                 <p class="text-xs text-slate-500"><?= e($appt['phone'] ?? '-') ?></p>
               </td>
               <td class="px-6 py-4 max-w-xs">
-                <p class="text-slate-600 truncate" title="<?= e($appt['reason'] ?? '') ?>"><?= e($appt['reason'] ?: '-') ?></p>
+                <div class="flex flex-col items-start gap-1">
+                  <p class="text-slate-600 truncate w-full max-w-[200px] xl:max-w-[300px]" title="Klik Lihat Selengkapnya"><?= e(str_replace(["\r", "\n"], ' ', $appt['reason'] ?: '-')) ?></p>
+                  <?php if (!empty($appt['reason'])): ?>
+                  <button type="button" onclick="showReasonModal(this)" class="text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded-md transition-colors whitespace-nowrap border border-blue-100 hover:border-blue-200">Lihat Selengkapnya</button>
+                  <div class="hidden reason-content"><?= e($appt['reason']) ?></div>
+                  <?php endif; ?>
+                </div>
               </td>
               <td class="px-6 py-4">
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold <?= $badgeCls ?>">
@@ -181,5 +187,42 @@ $msgError   = flash('error');
     </div>
 
   </main>
+
+  <!-- Modal Keluhan -->
+  <div id="reasonModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <h3 class="font-black text-slate-900 flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-600">assignment</span>
+          Detail Keluhan & Analisis AI
+        </h3>
+        <button onclick="closeReasonModal()" class="text-slate-400 hover:text-red-500 transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="p-6 overflow-auto whitespace-pre-wrap text-sm text-slate-700 leading-relaxed bg-white" id="reasonModalContent"></div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50 text-right">
+        <button onclick="closeReasonModal()" class="px-5 py-2.5 bg-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-300 transition-colors text-sm">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showReasonModal(btn) {
+      const content = btn.nextElementSibling.innerHTML;
+      document.getElementById('reasonModalContent').innerHTML = content;
+      document.getElementById('reasonModal').classList.remove('hidden');
+    }
+    function closeReasonModal() {
+      document.getElementById('reasonModal').classList.add('hidden');
+    }
+    
+    // Close modal on click outside
+    document.getElementById('reasonModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeReasonModal();
+      }
+    });
+  </script>
 </body>
 </html>
