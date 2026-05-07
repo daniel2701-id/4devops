@@ -137,8 +137,10 @@ HTML;
     if (isset($_GET['raw'])) {
         error_reporting(0);
         if (ob_get_length()) ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['html' => $rawHtml, 'filename' => $pdfFilename]);
+        header('Content-Type: text/html; charset=utf-8');
+        header('X-PDF-Filename: ' . $pdfFilename);
+        echo $rawHtml;
+        exit;
     } else {
         echo "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Resep</title></head><body>" . $rawHtml . "</body></html>";
     }
@@ -405,15 +407,17 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
       btnElement.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> <span class="btn-text">Memproses...</span>';
       btnElement.classList.add('opacity-75', 'pointer-events-none');
       
-      fetch(`rekam_medis.php?appt_id=${apptId}&pdf=1&raw=1`)
+      fetch(`rekam_medis.php?appt_id=${apptId}&pdf=1&raw=1`, { credentials: 'same-origin' })
           .then(async res => {
-              const text = await res.text();
-              try {
-                  return JSON.parse(text);
-              } catch (e) {
-                  console.error('Invalid JSON response from server:', text);
-                  throw new Error('Bukan JSON valid. Server merespons: ' + text.substring(0, 80));
+              const html = await res.text();
+              const filename = res.headers.get('X-PDF-Filename') || 'Resep_Pasien.pdf';
+              
+              // Jika server mengembalikan halaman login karena sesi dianggap habis oleh fetch
+              if (html.toLowerCase().includes('<title>login')) {
+                  throw new Error('Sesi Anda tidak terbaca oleh sistem. Silakan muat ulang (refresh) halaman ini.');
               }
+              
+              return { html, filename };
           })
           .then(data => {
               // Buat div tersembunyi di dokumen saat ini
@@ -425,6 +429,9 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
               document.body.appendChild(hiddenDiv);
               
               const element = hiddenDiv.querySelector('#pdf-export-wrap');
+              if (!element) {
+                  throw new Error('Data dari server tidak mengandung format PDF yang benar. ' + data.html.substring(0, 100));
+              }
               
               const opt = {
                   margin:       0.5,
@@ -434,14 +441,8 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
                   jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
               };
               
-              html2pdf().set(opt).from(element).save().then(() => {
+              return html2pdf().set(opt).from(element).save().then(() => {
                   // Bersihkan setelah berhasil
-                  document.body.removeChild(hiddenDiv);
-                  btnElement.innerHTML = originalText;
-                  btnElement.classList.remove('opacity-75', 'pointer-events-none');
-              }).catch(err => {
-                  console.error('PDF generation error:', err);
-                  alert('Gagal membuat PDF. Coba gunakan browser lain (Chrome/Edge).');
                   document.body.removeChild(hiddenDiv);
                   btnElement.innerHTML = originalText;
                   btnElement.classList.remove('opacity-75', 'pointer-events-none');
