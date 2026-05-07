@@ -282,9 +282,10 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
     </div>
     <nav class="flex-1 p-4 space-y-1">
       <?php $navItems = [
-        ['icon'=>'home',             'label'=>'Beranda',    'href'=>'dashboard.php',   'active'=>false],
-        ['icon'=>'calendar_month',   'label'=>'Jadwal',     'href'=>'jadwal.php',      'active'=>false],
-        ['icon'=>'chat',             'label'=>'Chat',       'href'=>'chat.php',        'active'=>false],
+        ['icon'=>'home',          'label'=>'Beranda',       'href'=>'dashboard.php',   'active'=>false],
+        ['icon'=>'calendar_month','label'=>'Jadwal Pasien', 'href'=>'jadwal.php',      'active'=>false],
+        ['icon'=>'edit_calendar', 'label'=>'Atur Jadwal',   'href'=>'atur_jadwal.php', 'active'=>false],
+        ['icon'=>'chat',          'label'=>'Chat',          'href'=>'chat.php',        'active'=>false],
       ];
       foreach ($navItems as $item):
         $cls = $item['active'] ? 'bg-primary-fixed text-primary font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-medium'; ?>
