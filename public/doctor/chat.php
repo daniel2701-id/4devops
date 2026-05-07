@@ -211,10 +211,6 @@ body { font-family: 'Inter', sans-serif; }
         <p class="font-bold text-slate-900"><?= e($selAppt['patient_name']) ?></p>
         <p class="text-xs text-slate-500"><?= format_date($selAppt['scheduled_at'], 'd M Y, H:i') ?> WIB</p>
       </div>
-      <a href="rekam_medis.php?appt_id=<?= $selAppt['id'] ?>" class="text-xs font-bold text-primary bg-primary-fixed px-3 py-1.5 rounded-lg hover:bg-primary hover:text-white transition-colors flex items-center gap-1">
-        <span class="material-symbols-outlined text-[14px]">medical_information</span>
-        Rekam Medis
-      </a>
     </div>
 
     <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 max-h-[calc(100vh-180px)]">
