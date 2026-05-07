@@ -395,15 +395,8 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
 
   </main>
   
-  <!-- Print-to-PDF stylesheet (hanya aktif saat window.print()) -->
-  <style id="print-style">
-    @media print {
-      body > *:not(#pdf-print-area) { display: none !important; }
-      #pdf-print-area { display: block !important; }
-      @page { margin: 1.5cm; }
-    }
-  </style>
-  <div id="pdf-print-area" style="display:none;"></div>
+  <!-- html2pdf.js dilayani secara lokal, tidak perlu CDN -->
+  <script src="../assets/js/html2pdf.bundle.min.js"></script>
   <script>
   function downloadPdfInBackground(btnElement, apptId) {
       const originalText = btnElement.innerHTML;
@@ -416,51 +409,44 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
               if (html.toLowerCase().includes('<title>login')) {
                   throw new Error('Sesi habis. Silakan refresh halaman dan coba lagi.');
               }
-              return html;
+              const filename = res.headers.get('X-PDF-Filename') || 'Resep_Pasien.pdf';
+              return { html, filename };
           })
-          .then(html => {
-              // Isi area print dengan konten resep
-              const printArea = document.getElementById('pdf-print-area');
-              printArea.innerHTML = `
-                <style>
-                  #pdf-print-area * { box-sizing: border-box; }
-                  #pdf-print-area { font-family: 'Times New Roman', serif; color: #000; }
-                  #pdf-print-area .pdf-wrap { max-width: 100%; }
-                  #pdf-print-area .pdf-head { border-bottom: 3px double #1e40af; padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
-                  #pdf-print-area .pdf-clinic-name { font-size: 22px; font-weight: 900; color: #1e40af; }
-                  #pdf-print-area .pdf-clinic-sub { font-size: 11px; color: #64748b; }
-                  #pdf-print-area .pdf-doc-info { font-size: 12px; text-align: right; }
-                  #pdf-print-area .pdf-patient { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 4px; padding: 12px 16px; margin-bottom: 18px; }
-                  #pdf-print-area .pdf-patient table { width: 100%; border-collapse: collapse; }
-                  #pdf-print-area .pdf-patient td { padding: 3px 6px; font-size: 12px; }
-                  #pdf-print-area .pdf-sec { margin-bottom: 16px; }
-                  #pdf-print-area .pdf-sec-title { font-size: 11px; text-transform: uppercase; color: #6b7280; font-weight: 700; margin-bottom: 4px; }
-                  #pdf-print-area .pdf-sec-body { background: #f8fafc; border-left: 3px solid #2563eb; padding: 10px 14px; font-size: 13px; line-height: 1.7; }
-                  #pdf-print-area .pdf-rx-body { background: #fefce8; border-left-color: #d97706; font-family: monospace; }
-                  #pdf-print-area .pdf-footer { margin-top: 50px; text-align: right; }
-                  #pdf-print-area .pdf-sig { display: inline-block; text-align: center; }
-                  #pdf-print-area .pdf-sig-line { margin-top: 60px; border-top: 1px solid #000; padding-top: 4px; font-size: 13px; font-weight: bold; }
-                </style>
-                ${html}
-              `;
+          .then(({ html, filename }) => {
+              const hiddenDiv = document.createElement('div');
+              hiddenDiv.innerHTML = html;
+              hiddenDiv.style.position = 'absolute';
+              hiddenDiv.style.left = '-9999px';
+              hiddenDiv.style.top = '0';
+              hiddenDiv.style.width = '800px';
+              document.body.appendChild(hiddenDiv);
 
-              // Tampilkan area print, print, lalu sembunyikan kembali
-              printArea.style.display = 'block';
-              
-              // Beri waktu browser render konten
-              setTimeout(() => {
-                  window.print();
-                  // Setelah print dialog ditutup
-                  setTimeout(() => {
-                      printArea.style.display = 'none';
-                      printArea.innerHTML = '';
+              const element = hiddenDiv.querySelector('#pdf-export-wrap') || hiddenDiv;
+
+              const opt = {
+                  margin:      0.5,
+                  filename:    filename,
+                  image:       { type: 'jpeg', quality: 0.98 },
+                  html2canvas: { scale: 2, useCORS: true, logging: false },
+                  jsPDF:       { unit: 'in', format: 'a4', orientation: 'portrait' }
+              };
+
+              html2pdf().set(opt).from(element).save()
+                  .then(() => {
+                      document.body.removeChild(hiddenDiv);
                       btnElement.innerHTML = originalText;
                       btnElement.classList.remove('opacity-75', 'pointer-events-none');
-                  }, 1000);
-              }, 300);
+                  })
+                  .catch(err => {
+                      console.error('html2pdf error:', err);
+                      document.body.removeChild(hiddenDiv);
+                      btnElement.innerHTML = originalText;
+                      btnElement.classList.remove('opacity-75', 'pointer-events-none');
+                      alert('Gagal membuat PDF: ' + err.message);
+                  });
           })
           .catch(err => {
-              console.error('PDF error:', err);
+              console.error('Fetch error:', err);
               alert('Gagal: ' + err.message);
               btnElement.innerHTML = originalText;
               btnElement.classList.remove('opacity-75', 'pointer-events-none');
