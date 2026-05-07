@@ -90,10 +90,9 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
   .sig-box { text-align: center; }
   .sig-line { margin-top: 60px; border-top: 1px solid #374151; padding-top: 6px; font-size: 12px; }
   .date-stamp { font-size: 11px; color: #6b7280; }
-  @media print { body { padding: 15px; } .no-print { display: none !important; } }
 </style>
 </head>
-<body>
+<body id="pdf-content">
 <div class="letterhead">
   <div>
     <div class="clinic-name">&#9829; CareConnect</div>
@@ -138,24 +137,8 @@ if (isset($_GET['pdf']) && $_GET['pdf'] === '1') {
     <div class="sig-line">{$apptData['doctor_name']}<br><span style='font-size:10px;color:#64748b'>{$apptData['specialization']}</span></div>
   </div>
 </div>
-
-<div id="print-controls" style="text-align:center; padding: 10px; background: #fef3c7; color: #b45309; font-weight: bold; border-bottom: 1px solid #fde68a; margin-bottom: 20px;" class="no-print">
-  Resep sedang diunduh otomatis. Jika unduhan tidak berjalan, <a href="#" onclick="window.print();return false;" style="color:#d97706;text-decoration:underline;">klik di sini untuk Mencetak/Menyimpan PDF secara manual</a>.
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-window.addEventListener('load', () => {
-    // Hide print controls from the PDF
-    const controls = document.getElementById('print-controls');
-    const opt = {
-      margin:       0.5,
-      filename:     '{$pdfFilename}',
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, ignoreElements: (el) => el.id === 'print-controls' },
-      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(document.body).save();
-});
+    window.pdfFilename = '{$pdfFilename}';
 </script>
 </body>
 </html>
@@ -315,11 +298,11 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
         <p class="text-slate-500 font-medium mt-1">Dokumentasi klinis &amp; resep elektronik.</p>
       </div>
       <?php if (!empty($record)): ?>
-      <a href="rekam_medis.php?appt_id=<?= $apptId ?>&pdf=1" target="_blank"
+      <button onclick="downloadPdfInBackground(this, <?= $apptId ?>)"
          class="ml-auto inline-flex items-center gap-2 bg-emerald-600 text-white font-bold px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition-colors text-sm shadow-md">
         <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
-        Unduh Resep PDF
-      </a>
+        <span class="btn-text">Unduh Resep PDF</span>
+      </button>
       <?php endif; ?>
     </div>
 
@@ -410,5 +393,56 @@ if (!empty($appt['birth_date']) && $appt['birth_date'] !== '0000-00-00') {
     </div>
 
   </main>
+  
+  <!-- script untuk PDF Background Download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+  function downloadPdfInBackground(btnElement, apptId) {
+      const originalText = btnElement.innerHTML;
+      btnElement.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> <span class="btn-text">Memproses...</span>';
+      btnElement.classList.add('opacity-75', 'pointer-events-none');
+      
+      fetch(`rekam_medis.php?appt_id=${apptId}&pdf=1&raw=1`)
+          .then(res => res.text())
+          .then(html => {
+              // Create a hidden iframe to hold the document
+              const iframe = document.createElement('iframe');
+              iframe.style.position = 'absolute';
+              iframe.style.width = '800px';
+              iframe.style.height = '1000px';
+              iframe.style.left = '-9999px';
+              document.body.appendChild(iframe);
+              
+              const doc = iframe.contentWindow.document;
+              doc.open();
+              doc.write(html);
+              doc.close();
+              
+              setTimeout(() => {
+                  const element = doc.getElementById('pdf-content');
+                  const filename = iframe.contentWindow.pdfFilename || 'Resep.pdf';
+                  
+                  const opt = {
+                      margin:       0.5,
+                      filename:     filename,
+                      image:        { type: 'jpeg', quality: 0.98 },
+                      html2canvas:  { scale: 2 },
+                      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                  };
+                  
+                  html2pdf().set(opt).from(element).save().then(() => {
+                      document.body.removeChild(iframe);
+                      btnElement.innerHTML = originalText;
+                      btnElement.classList.remove('opacity-75', 'pointer-events-none');
+                  });
+              }, 500); // Give iframe 500ms to parse/render HTML completely
+          })
+          .catch(err => {
+              alert('Gagal memuat resep. Silakan coba lagi.');
+              btnElement.innerHTML = originalText;
+              btnElement.classList.remove('opacity-75', 'pointer-events-none');
+          });
+  }
+  </script>
 </body>
 </html>
